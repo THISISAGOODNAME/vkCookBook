@@ -1,5 +1,5 @@
 //
-// Created by yangyanjun on 2017/6/13.
+// Created by aicdg on 2017/6/13.
 //
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,26 +27,18 @@
 // Author:   Pawel Lapinski
 // LinkedIn: https://www.linkedin.com/in/pawel-lapinski-84522329
 //
-// Vulkan Functions
+// Chapter: 01 Instance and Devices
+// Recipe:  05 Loading function exported from a Vulkan Loader library
 
-#ifndef VKCOOKBOOK_VULKANFUNCTIONS_H
-#define VKCOOKBOOK_VULKANFUNCTIONS_H
+#ifndef VKCOOKBOOK_S05_LOADING_FUNCTION_EXPORTED_FROM_A_VULKAN_LOADER_LIBRARY_H
+#define VKCOOKBOOK_S05_LOADING_FUNCTION_EXPORTED_FROM_A_VULKAN_LOADER_LIBRARY_H
 
-#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
 
 namespace VKCookbook {
 
-#define EXPORTED_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define GLOBAL_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
+    bool LoadFunctionExportedFromVulkanLoaderLibrary( LIBRARY_TYPE const & vulkan_library );
 
-#include "ListOfVulkanFunctions.inl"
-
-};
+} // namespace VulkanCookbook
 
 
-#endif //VKCOOKBOOK_VULKANFUNCTIONS_H
+#endif //VKCOOKBOOK_S05_LOADING_FUNCTION_EXPORTED_FROM_A_VULKAN_LOADER_LIBRARY_H

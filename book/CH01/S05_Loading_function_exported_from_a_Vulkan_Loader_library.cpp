@@ -1,5 +1,5 @@
 //
-// Created by yangyanjun on 2017/6/13.
+// Created by aicdg on 2017/6/13.
 //
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,31 +22,36 @@
 //
 // Vulkan Cookbook
 // ISBN: 9781786468154
-// © Packt Publishing Limited
+// � Packt Publishing Limited
 //
 // Author:   Pawel Lapinski
 // LinkedIn: https://www.linkedin.com/in/pawel-lapinski-84522329
 //
-// Vulkan Functions
+// Chapter: 01 Instance and Devices
+// Recipe:  05 Loading function exported from a Vulkan Loader library
 
-#ifndef VKCOOKBOOK_VULKANFUNCTIONS_H
-#define VKCOOKBOOK_VULKANFUNCTIONS_H
-
-#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
+#include "S05_Loading_function_exported_from_a_Vulkan_Loader_library.h"
 
 namespace VKCookbook {
 
-#define EXPORTED_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define GLOBAL_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
+    bool LoadFunctionExportedFromVulkanLoaderLibrary( LIBRARY_TYPE const & vulkan_library ) {
+#if defined _WIN32
+#define LoadFunction GetProcAddress
+#elif defined __linux
+#define LoadFunction dlsym
+#endif
+
+#define EXPORTED_VULKAN_FUNCTION( name )                              \
+    name = (PFN_##name)LoadFunction( vulkan_library, #name );         \
+    if( name == nullptr ) {                                           \
+      std::cout << "Could not load exported Vulkan function named: "  \
+        #name << std::endl;                                           \
+      return false;                                                   \
+    }
 
 #include "ListOfVulkanFunctions.inl"
 
-};
+        return true;
+    }
 
-
-#endif //VKCOOKBOOK_VULKANFUNCTIONS_H
+} // namespace VulkanCookbook
