@@ -10,5 +10,12 @@ if(NOT DEFINED ENV{VK_INSTANCE_LAYERS})
     set( ENV{VK_INSTANCE_LAYERS} VK_LAYER_LUNARG_standard_validation )
 endif()
 
-set(SOURCE_FILES main.cpp)
+set(COMMON_FILES book/common/ListOfVulkanFunctions.inl book/common/VulkanFunctions.cpp book/common/VulkanFunctions.h)
+
+set(CH01_INSTANCE_AND_DEVICES
+        book/CH01/S03_Connecting_with_a_Vulkan_Loader_library.cpp book/CH01/S03_Connecting_with_a_Vulkan_Loader_library.h)
+
+set(SOURCE_FILES
+        ${COMMON_FILES}
+        ${CH01_INSTANCE_AND_DEVICES})
 add_executable(vkCookBook ${SOURCE_FILES})
