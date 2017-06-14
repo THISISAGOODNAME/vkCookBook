@@ -33,6 +33,8 @@
 #ifndef VKCOOKBOOK_S03_CONNECTING_WITH_A_VULKAN_LOADER_LIBRARY_H
 #define VKCOOKBOOK_S03_CONNECTING_WITH_A_VULKAN_LOADER_LIBRARY_H
 
+#include "Common.h"
+
 namespace VKCookbook {
 
     bool ConnectWithVulkanLoaderLibrary( LIBRARY_TYPE & vulkan_library );

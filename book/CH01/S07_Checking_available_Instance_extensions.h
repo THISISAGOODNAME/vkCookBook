@@ -1,5 +1,5 @@
 //
-// Created by yangyanjun on 2017/6/13.
+// Created by aicdg on 2017/6/14.
 //
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,31 +22,25 @@
 //
 // Vulkan Cookbook
 // ISBN: 9781786468154
-// © Packt Publishing Limited
+// � Packt Publishing Limited
 //
 // Author:   Pawel Lapinski
 // LinkedIn: https://www.linkedin.com/in/pawel-lapinski-84522329
 //
-// Vulkan Functions
+// Chapter: 01 Instance and Devices
+// Recipe:  07 Checking available Instance extensions
 
-#ifndef VKCOOKBOOK_VULKANFUNCTIONS_H
-#define VKCOOKBOOK_VULKANFUNCTIONS_H
 
-//#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
+#ifndef VKCOOKBOOK_S07_CHECKING_AVAILABLE_INSTANCE_EXTENSIONS_H
+#define VKCOOKBOOK_S07_CHECKING_AVAILABLE_INSTANCE_EXTENSIONS_H
 
-namespace VKCookbook {
+#include "Common.h"
 
-#define EXPORTED_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define GLOBAL_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
+namespace VkCookbook {
 
-#include "ListOfVulkanFunctions.inl"
+    bool CheckAvailableInstanceExtensions( std::vector<VkExtensionProperties> & available_extensions );
 
 };
 
 
-#endif //VKCOOKBOOK_VULKANFUNCTIONS_H
+#endif //VKCOOKBOOK_S07_CHECKING_AVAILABLE_INSTANCE_EXTENSIONS_H

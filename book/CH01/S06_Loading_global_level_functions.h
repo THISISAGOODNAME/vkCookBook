@@ -1,5 +1,5 @@
 //
-// Created by yangyanjun on 2017/6/13.
+// Created by aicdg on 2017/6/14.
 //
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,31 +22,24 @@
 //
 // Vulkan Cookbook
 // ISBN: 9781786468154
-// © Packt Publishing Limited
+// � Packt Publishing Limited
 //
 // Author:   Pawel Lapinski
 // LinkedIn: https://www.linkedin.com/in/pawel-lapinski-84522329
 //
-// Vulkan Functions
+// Chapter: 01 Instance and Devices
+// Recipe:  06 Loading global-level functions
 
-#ifndef VKCOOKBOOK_VULKANFUNCTIONS_H
-#define VKCOOKBOOK_VULKANFUNCTIONS_H
+#ifndef VKCOOKBOOK_S06_LOADING_GLOBAL_LEVEL_FUNCTIONS_H
+#define VKCOOKBOOK_S06_LOADING_GLOBAL_LEVEL_FUNCTIONS_H
 
-//#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
+#include "Common.h"
 
 namespace VKCookbook {
 
-#define EXPORTED_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define GLOBAL_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-
-#include "ListOfVulkanFunctions.inl"
+    bool LoadGlobalLevelFunctions();
 
 };
 
 
-#endif //VKCOOKBOOK_VULKANFUNCTIONS_H
+#endif //VKCOOKBOOK_S06_LOADING_GLOBAL_LEVEL_FUNCTIONS_H

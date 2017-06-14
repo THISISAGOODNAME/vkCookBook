@@ -1,5 +1,5 @@
 //
-// Created by yangyanjun on 2017/6/13.
+// Created by aicdg on 2017/6/14.
 //
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,31 +22,39 @@
 //
 // Vulkan Cookbook
 // ISBN: 9781786468154
-// © Packt Publishing Limited
+// � Packt Publishing Limited
 //
 // Author:   Pawel Lapinski
 // LinkedIn: https://www.linkedin.com/in/pawel-lapinski-84522329
 //
-// Vulkan Functions
-
-#ifndef VKCOOKBOOK_VULKANFUNCTIONS_H
-#define VKCOOKBOOK_VULKANFUNCTIONS_H
-
-//#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
-
-namespace VKCookbook {
-
-#define EXPORTED_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define GLOBAL_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-
-#include "ListOfVulkanFunctions.inl"
-
-};
+// Chapter: 01 Instance and Devices
+// Recipe:  07 Checking available Instance extensions
 
 
-#endif //VKCOOKBOOK_VULKANFUNCTIONS_H
+#include "S07_Checking_available_Instance_extensions.h"
+
+namespace VkCookbook {
+
+    bool CheckAvailableInstanceExtensions( std::vector<VkExtensionProperties> & available_extensions ) {
+        uint32_t extensions_count = 0;
+        VkResult result = VK_SUCCESS;
+
+        result = vkEnumerateInstanceExtensionProperties( nullptr, &extensions_count, nullptr );
+        if( (result != VK_SUCCESS) ||
+            (extensions_count == 0) ) {
+            std::cout << "Could not get the number of instance extensions." << std::endl;
+            return false;
+        }
+
+        available_extensions.resize( extensions_count );
+        result = vkEnumerateInstanceExtensionProperties( nullptr, &extensions_count, available_extensions.data() );
+        if( (result != VK_SUCCESS) ||
+            (extensions_count == 0) ) {
+            std::cout << "Could not enumerate instance extensions." << std::endl;
+            return false;
+        }
+
+        return true;
+    }
+
+}

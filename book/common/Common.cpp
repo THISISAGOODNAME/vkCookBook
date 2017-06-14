@@ -1,5 +1,5 @@
 //
-// Created by yangyanjun on 2017/6/13.
+// Created by aicdg on 2017/6/14.
 //
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,31 +22,26 @@
 //
 // Vulkan Cookbook
 // ISBN: 9781786468154
-// © Packt Publishing Limited
+// � Packt Publishing Limited
 //
 // Author:   Pawel Lapinski
 // LinkedIn: https://www.linkedin.com/in/pawel-lapinski-84522329
 //
-// Vulkan Functions
+// Common
+// Common
 
-#ifndef VKCOOKBOOK_VULKANFUNCTIONS_H
-#define VKCOOKBOOK_VULKANFUNCTIONS_H
+#include "Common.h"
 
-//#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
+namespace VulkanCookbook {
 
-namespace VKCookbook {
+    bool IsExtensionSupported( std::vector<VkExtensionProperties> const & available_extensions,
+                               char const * const                         extension ) {
+        for( auto & available_extension : available_extensions ) {
+            if( strstr( available_extension.extensionName, extension ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-#define EXPORTED_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define GLOBAL_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-
-#include "ListOfVulkanFunctions.inl"
-
-};
-
-
-#endif //VKCOOKBOOK_VULKANFUNCTIONS_H
+}

@@ -1,5 +1,5 @@
 //
-// Created by yangyanjun on 2017/6/13.
+// Created by aicdg on 2017/6/14.
 //
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,31 +22,62 @@
 //
 // Vulkan Cookbook
 // ISBN: 9781786468154
-// © Packt Publishing Limited
+// � Packt Publishing Limited
 //
 // Author:   Pawel Lapinski
 // LinkedIn: https://www.linkedin.com/in/pawel-lapinski-84522329
 //
-// Vulkan Functions
+// Common
 
-#ifndef VKCOOKBOOK_VULKANFUNCTIONS_H
-#define VKCOOKBOOK_VULKANFUNCTIONS_H
+#ifndef VKCOOKBOOK_COMMON_H
+#define VKCOOKBOOK_COMMON_H
 
-//#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
 
-namespace VKCookbook {
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
-#define EXPORTED_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define GLOBAL_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define INSTANCE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION( name ) extern PFN_##name name;
-#define DEVICE_LEVEL_VULKAN_FUNCTION_FROM_EXTENSION( name, extension ) extern PFN_##name name;
+#include <iostream>
+#include <vector>
+#include <array>
+#include <string>
+#include <cstring>
+#include <thread>
+#include <functional>
+#include "VulkanDestroyer.h"
 
-#include "ListOfVulkanFunctions.inl"
+namespace VulkanCookbook {
+
+    // Vulkan library type
+#ifdef _WIN32
+#define LIBRARY_TYPE HMODULE
+#endif
+
+    // OS-specific parameters
+    struct WindowParameters {
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+
+        HINSTANCE          HInstance;
+        HWND               HWnd;
+
+#elif defined VK_USE_PLATFORM_XLIB_KHR
+
+        Display          * Dpy;
+        Window             Window;
+
+#elif defined VK_USE_PLATFORM_XCB_KHR
+
+        xcb_connection_t * Connection;
+        xcb_window_t       Window;
+
+#endif
+    };
+
+    // Extension availability check
+    bool IsExtensionSupported( std::vector<VkExtensionProperties> const & available_extensions,
+                               char const * const                         extension );
 
 };
 
 
-#endif //VKCOOKBOOK_VULKANFUNCTIONS_H
+#endif //VKCOOKBOOK_COMMON_H
