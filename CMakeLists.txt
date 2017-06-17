@@ -55,7 +55,9 @@ set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S19_Destroying_a_logical_device.cpp
         book/CH01/S19_Destroying_a_logical_device.h
         book/CH01/S20_Destroying_a_Vulkan_Instance.cpp
-        book/CH01/S20_Destroying_a_Vulkan_Instance.h)
+        book/CH01/S20_Destroying_a_Vulkan_Instance.h
+        book/CH01/S21_Releasing_a_Vulkan_Loader_library.cpp
+        book/CH01/S21_Releasing_a_Vulkan_Loader_library.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
