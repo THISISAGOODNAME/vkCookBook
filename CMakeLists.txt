@@ -35,7 +35,9 @@ set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S09_Loading_instance_level_functions.cpp
         book/CH01/S09_Loading_instance_level_functions.h
         book/CH01/S10_Enumerating_available_physical_devices.cpp
-        book/CH01/S10_Enumerating_available_physical_devices.h)
+        book/CH01/S10_Enumerating_available_physical_devices.h
+        book/CH01/S11_Checking_available_device_extensions.cpp
+        book/CH01/S11_Checking_available_device_extensions.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
