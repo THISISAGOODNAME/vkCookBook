@@ -37,7 +37,7 @@ set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S10_Enumerating_available_physical_devices.cpp
         book/CH01/S10_Enumerating_available_physical_devices.h
         book/CH01/S11_Checking_available_device_extensions.cpp
-        book/CH01/S11_Checking_available_device_extensions.h)
+        book/CH01/S11_Checking_available_device_extensions.h book/CH01/S12_Getting_features_and_properties_of_a_physical_device.cpp book/CH01/S12_Getting_features_and_properties_of_a_physical_device.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
