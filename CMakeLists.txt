@@ -47,7 +47,9 @@ set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S15_Creating_a_logical_device.cpp
         book/CH01/S15_Creating_a_logical_device.h
         book/CH01/S16_Loading_device_level_functions.cpp
-        book/CH01/S16_Loading_device_level_functions.h)
+        book/CH01/S16_Loading_device_level_functions.h
+        book/CH01/S17_Getting_a_device_queue.cpp
+        book/CH01/S17_Getting_a_device_queue.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
