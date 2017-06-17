@@ -46,7 +46,7 @@
 #include <functional>
 #include "VulkanDestroyer.h"
 
-namespace VulkanCookbook {
+namespace VKCookbook {
 
     // Vulkan library type
 #ifdef _WIN32

@@ -36,7 +36,7 @@
 
 #include "Common.h"
 
-namespace VkCookbook {
+namespace VKCookbook {
 
     bool CheckAvailableInstanceExtensions( std::vector<VkExtensionProperties> & available_extensions );
 

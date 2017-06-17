@@ -33,7 +33,7 @@
 
 #include "S07_Checking_available_Instance_extensions.h"
 
-namespace VkCookbook {
+namespace VKCookbook {
 
     bool CheckAvailableInstanceExtensions( std::vector<VkExtensionProperties> & available_extensions ) {
         uint32_t extensions_count = 0;

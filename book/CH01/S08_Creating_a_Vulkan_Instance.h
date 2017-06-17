@@ -1,5 +1,5 @@
 //
-// Created by aicdg on 2017/6/14.
+// Created by aicdg on 2017/6/17.
 //
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,21 +27,21 @@
 // Author:   Pawel Lapinski
 // LinkedIn: https://www.linkedin.com/in/pawel-lapinski-84522329
 //
-// Common
-// Common
+// Chapter: 01 Instance and Devices
+// Recipe:  08 Creating a Vulkan Instance
+
+#ifndef VKCOOKBOOK_S08_CREATING_A_VULKAN_INSTANCE_H
+#define VKCOOKBOOK_S08_CREATING_A_VULKAN_INSTANCE_H
 
 #include "Common.h"
 
 namespace VKCookbook {
 
-    bool IsExtensionSupported( std::vector<VkExtensionProperties> const & available_extensions,
-                               char const * const                         extension ) {
-        for( auto & available_extension : available_extensions ) {
-            if( strstr( available_extension.extensionName, extension ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
+    bool CreateVulkanInstance( std::vector<char const *> const & desired_extensions,
+                               char const * const                application_name,
+                               VkInstance                        & instance );
 
-}
+};
+
+
+#endif //VKCOOKBOOK_S08_CREATING_A_VULKAN_INSTANCE_H
