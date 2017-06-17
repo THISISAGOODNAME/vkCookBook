@@ -33,7 +33,9 @@ set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S08_Creating_a_Vulkan_Instance.cpp
         book/CH01/S08_Creating_a_Vulkan_Instance.h
         book/CH01/S09_Loading_instance_level_functions.cpp
-        book/CH01/S09_Loading_instance_level_functions.h)
+        book/CH01/S09_Loading_instance_level_functions.h
+        book/CH01/S10_Enumerating_available_physical_devices.cpp
+        book/CH01/S10_Enumerating_available_physical_devices.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
