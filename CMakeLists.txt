@@ -53,7 +53,9 @@ set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S18_Creating_a_logical_device_with_geometry_shaders_and_graphics_queue.cpp
         book/CH01/S18_Creating_a_logical_device_with_geometry_shaders_and_graphics_queue.h
         book/CH01/S19_Destroying_a_logical_device.cpp
-        book/CH01/S19_Destroying_a_logical_device.h)
+        book/CH01/S19_Destroying_a_logical_device.h
+        book/CH01/S20_Destroying_a_Vulkan_Instance.cpp
+        book/CH01/S20_Destroying_a_Vulkan_Instance.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
