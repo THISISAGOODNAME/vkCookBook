@@ -45,7 +45,9 @@ set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S14_Selecting_index_of_a_queue_family_with_desired_capabilities.cpp
         book/CH01/S14_Selecting_index_of_a_queue_family_with_desired_capabilities.h
         book/CH01/S15_Creating_a_logical_device.cpp
-        book/CH01/S15_Creating_a_logical_device.h)
+        book/CH01/S15_Creating_a_logical_device.h
+        book/CH01/S16_Loading_device_level_functions.cpp
+        book/CH01/S16_Loading_device_level_functions.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
