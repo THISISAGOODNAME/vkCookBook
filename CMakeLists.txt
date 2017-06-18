@@ -62,7 +62,9 @@ set(CH01_INSTANCE_AND_DEVICES
 
 set(CH02_IMAGE_PRESENTATION
         book/CH02/S01_Creating_a_Vulkan_Instance_with_WSI_extensions_enabled.cpp
-        book/CH02/S01_Creating_a_Vulkan_Instance_with_WSI_extensions_enabled.h)
+        book/CH02/S01_Creating_a_Vulkan_Instance_with_WSI_extensions_enabled.h
+        book/CH02/S02_Creating_a_presentation_surface.cpp
+        book/CH02/S02_Creating_a_presentation_surface.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
