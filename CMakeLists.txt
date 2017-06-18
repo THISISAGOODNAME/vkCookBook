@@ -60,7 +60,12 @@ set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S21_Releasing_a_Vulkan_Loader_library.h
         book/CH01/CH01_Instance_and_Devices.h)
 
+set(CH02_IMAGE_PRESENTATION
+        book/CH02/S01_Creating_a_Vulkan_Instance_with_WSI_extensions_enabled.cpp
+        book/CH02/S01_Creating_a_Vulkan_Instance_with_WSI_extensions_enabled.h)
+
 set(SOURCE_FILES
         ${COMMON_FILES}
-        ${CH01_INSTANCE_AND_DEVICES})
+        ${CH01_INSTANCE_AND_DEVICES}
+        ${CH02_IMAGE_PRESENTATION})
 add_executable(vkCookBook ${SOURCE_FILES})
