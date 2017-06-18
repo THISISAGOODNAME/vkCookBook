@@ -66,7 +66,11 @@ set(CH02_IMAGE_PRESENTATION
         book/CH02/S02_Creating_a_presentation_surface.cpp
         book/CH02/S02_Creating_a_presentation_surface.h
         book/CH02/S03_Selecting_a_queue_family_that_supports_presentation_to_a_given_surface.cpp
-        book/CH02/S03_Selecting_a_queue_family_that_supports_presentation_to_a_given_surface.h book/CH02/S04_Creating_a_logical_device_with_WSI_extensions_enabled.cpp book/CH02/S04_Creating_a_logical_device_with_WSI_extensions_enabled.h)
+        book/CH02/S03_Selecting_a_queue_family_that_supports_presentation_to_a_given_surface.h
+        book/CH02/S04_Creating_a_logical_device_with_WSI_extensions_enabled.cpp
+        book/CH02/S04_Creating_a_logical_device_with_WSI_extensions_enabled.h
+        book/CH02/S05_Selecting_a_desired_presentation_mode.cpp
+        book/CH02/S05_Selecting_a_desired_presentation_mode.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
