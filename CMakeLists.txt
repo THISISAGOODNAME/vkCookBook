@@ -70,7 +70,9 @@ set(CH02_IMAGE_PRESENTATION
         book/CH02/S04_Creating_a_logical_device_with_WSI_extensions_enabled.cpp
         book/CH02/S04_Creating_a_logical_device_with_WSI_extensions_enabled.h
         book/CH02/S05_Selecting_a_desired_presentation_mode.cpp
-        book/CH02/S05_Selecting_a_desired_presentation_mode.h)
+        book/CH02/S05_Selecting_a_desired_presentation_mode.h
+        book/CH02/S06_Getting_capabilities_of_a_presentation_surface.cpp
+        book/CH02/S06_Getting_capabilities_of_a_presentation_surface.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
