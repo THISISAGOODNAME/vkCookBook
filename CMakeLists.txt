@@ -74,7 +74,9 @@ set(CH02_IMAGE_PRESENTATION
         book/CH02/S06_Getting_capabilities_of_a_presentation_surface.cpp
         book/CH02/S06_Getting_capabilities_of_a_presentation_surface.h
         book/CH02/S07_Selecting_a_number_of_swapchain_images.cpp
-        book/CH02/S07_Selecting_a_number_of_swapchain_images.h)
+        book/CH02/S07_Selecting_a_number_of_swapchain_images.h
+        book/CH02/S08_Choosing_a_size_of_swapchain_images.cpp
+        book/CH02/S08_Choosing_a_size_of_swapchain_images.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
