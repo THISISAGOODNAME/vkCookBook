@@ -84,7 +84,9 @@ set(CH02_IMAGE_PRESENTATION
         book/CH02/S11_Selecting_a_format_of_swapchain_images.cpp
         book/CH02/S11_Selecting_a_format_of_swapchain_images.h
         book/CH02/S12_Creating_a_swapchain.cpp
-        book/CH02/S12_Creating_a_swapchain.h)
+        book/CH02/S12_Creating_a_swapchain.h
+        book/CH02/S13_Getting_handles_of_swapchain_images.cpp
+        book/CH02/S13_Getting_handles_of_swapchain_images.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
