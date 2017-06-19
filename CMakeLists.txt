@@ -96,7 +96,7 @@ set(CH02_IMAGE_PRESENTATION
         book/CH02/S17_Destroying_a_swapchain.cpp
         book/CH02/S17_Destroying_a_swapchain.h
         book/CH02/S18_Destroying_a_presentation_surface.cpp
-        book/CH02/S18_Destroying_a_presentation_surface.h)
+        book/CH02/S18_Destroying_a_presentation_surface.h book/CH02/CH02_Image_Presentation.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
