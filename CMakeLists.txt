@@ -140,9 +140,32 @@ set(CH03_COMMAND_BUFFERS_AND_SYNCHRONIZATION
         book/CH03/S19_Destroying_a_command_pool.h
         book/CH03/CH03_Command_Buffers_and_Synchronization.h)
 
+set(CH04_RESOURCES_AND_MEMORY
+        book/CH04/S01_Creating_a_buffer.cpp
+        book/CH04/S01_Creating_a_buffer.h
+        book/CH04/S02_Allocating_and_binding_memory_object_to_a_buffer.cpp
+        book/CH04/S02_Allocating_and_binding_memory_object_to_a_buffer.h
+        book/CH04/S03_Setting_a_buffer_memory_barrier.cpp
+        book/CH04/S03_Setting_a_buffer_memory_barrier.h
+        book/CH04/S04_Creating_a_buffer_view.cpp
+        book/CH04/S04_Creating_a_buffer_view.h
+        book/CH04/S05_Creating_an_image.cpp
+        book/CH04/S05_Creating_an_image.h
+        book/CH04/S06_Allocating_and_binding_memory_object_to_an_image.cpp
+        book/CH04/S06_Allocating_and_binding_memory_object_to_an_image.h
+        book/CH04/S07_Setting_an_image_memory_barrier.cpp
+        book/CH04/S07_Setting_an_image_memory_barrier.h
+        book/CH04/S08_Creating_an_image_view.cpp
+        book/CH04/S08_Creating_an_image_view.h
+        book/CH04/S09_Creating_a_2D_image_and_view.cpp
+        book/CH04/S09_Creating_a_2D_image_and_view.h
+        book/CH04/S10_Creating_a_layered_2D_image_with_a_CUBEMAP_view.cpp
+        book/CH04/S10_Creating_a_layered_2D_image_with_a_CUBEMAP_view.h)
+
 set(SOURCE_FILES
         ${COMMON_FILES}
         ${CH01_INSTANCE_AND_DEVICES}
         ${CH02_IMAGE_PRESENTATION}
-        ${CH03_COMMAND_BUFFERS_AND_SYNCHRONIZATION})
+        ${CH03_COMMAND_BUFFERS_AND_SYNCHRONIZATION}
+        ${CH04_RESOURCES_AND_MEMORY})
 add_executable(vkCookBook ${SOURCE_FILES})
