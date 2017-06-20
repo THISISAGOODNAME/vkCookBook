@@ -96,10 +96,53 @@ set(CH02_IMAGE_PRESENTATION
         book/CH02/S17_Destroying_a_swapchain.cpp
         book/CH02/S17_Destroying_a_swapchain.h
         book/CH02/S18_Destroying_a_presentation_surface.cpp
-        book/CH02/S18_Destroying_a_presentation_surface.h book/CH02/CH02_Image_Presentation.h)
+        book/CH02/S18_Destroying_a_presentation_surface.h
+        book/CH02/CH02_Image_Presentation.h)
+
+set(CH03_COMMAND_BUFFERS_AND_SYNCHRONIZATION
+        book/CH03/S01_Creating_a_command_pool.cpp
+        book/CH03/S01_Creating_a_command_pool.h
+        book/CH03/S02_Allocating_command_buffers.cpp
+        book/CH03/S02_Allocating_command_buffers.h
+        book/CH03/S03_Beginning_a_command_buffer_recording_operation.cpp
+        book/CH03/S03_Beginning_a_command_buffer_recording_operation.h
+        book/CH03/S04_Ending_a_command_buffer_recording_operation.cpp
+        book/CH03/S04_Ending_a_command_buffer_recording_operation.h
+        book/CH03/S05_Resetting_a_command_buffer.cpp
+        book/CH03/S05_Resetting_a_command_buffer.h
+        book/CH03/S06_Resetting_a_command_pool.cpp
+        book/CH03/S06_Resetting_a_command_pool.h
+        book/CH03/S07_Creating_a_semaphore.cpp
+        book/CH03/S07_Creating_a_semaphore.h
+        book/CH03/S08_Creating_a_fence.cpp
+        book/CH03/S08_Creating_a_fence.h
+        book/CH03/S09_Waiting_for_fences.cpp
+        book/CH03/S09_Waiting_for_fences.h
+        book/CH03/S10_Resetting_fences.cpp
+        book/CH03/S10_Resetting_fences.h
+        book/CH03/S11_Submitting_command_buffers_to_the_queue.cpp
+        book/CH03/S11_Submitting_command_buffers_to_the_queue.h
+        book/CH03/S12_Synchronizing_two_command_buffers.cpp
+        book/CH03/S12_Synchronizing_two_command_buffers.h
+        book/CH03/S13_Checking_if_processing_of_a_submitted_command_buffer_has_finished.cpp
+        book/CH03/S13_Checking_if_processing_of_a_submitted_command_buffer_has_finished.h
+        book/CH03/S14_Waiting_until_all_commands_submitted_to_a_queue_are_finished.cpp
+        book/CH03/S14_Waiting_until_all_commands_submitted_to_a_queue_are_finished.h
+        book/CH03/S15_Waiting_for_all_submitted_commands_to_be_finished.cpp
+        book/CH03/S15_Waiting_for_all_submitted_commands_to_be_finished.h
+        book/CH03/S16_Destroying_a_fence.cpp
+        book/CH03/S16_Destroying_a_fence.h
+        book/CH03/S17_Destroying_a_semaphore.cpp
+        book/CH03/S17_Destroying_a_semaphore.h
+        book/CH03/S18_Freeing_command_buffers.cpp
+        book/CH03/S18_Freeing_command_buffers.h
+        book/CH03/S19_Destroying_a_command_pool.cpp
+        book/CH03/S19_Destroying_a_command_pool.h
+        book/CH03/CH03_Command_Buffers_and_Synchronization.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
         ${CH01_INSTANCE_AND_DEVICES}
-        ${CH02_IMAGE_PRESENTATION})
+        ${CH02_IMAGE_PRESENTATION}
+        ${CH03_COMMAND_BUFFERS_AND_SYNCHRONIZATION})
 add_executable(vkCookBook ${SOURCE_FILES})
