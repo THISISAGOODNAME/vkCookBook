@@ -6,6 +6,9 @@
 // Chapter: 05 Descriptor Sets
 // Recipe:  01 Creating a sampler
 
+#ifndef VKCOOKBOOK_S01_CREATING_A_SAMPLER_H
+#define VKCOOKBOOK_S01_CREATING_A_SAMPLER_H
+
 #include "Common.h"
 
 namespace VKCookbook {

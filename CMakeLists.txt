@@ -225,7 +225,11 @@ set(CH05_DESCRIPTOR_SETS
         book/CH05/S19_Destroying_a_descriptor_set_layout.cpp
         book/CH05/S19_Destroying_a_descriptor_set_layout.h
         book/CH05/S20_Destroying_a_sampler.cpp
-        book/CH05/S20_Destroying_a_sampler.h book/CH05/CH05_Descriptor_Sets.h)
+        book/CH05/S20_Destroying_a_sampler.h
+        book/CH05/CH05_Descriptor_Sets.h)
+
+set(CH06_RENDER_PASSES_AND_FRAMEBUFFERS
+        )
 
 set(SOURCE_FILES
         ${COMMON_FILES}
@@ -233,5 +237,6 @@ set(SOURCE_FILES
         ${CH02_IMAGE_PRESENTATION}
         ${CH03_COMMAND_BUFFERS_AND_SYNCHRONIZATION}
         ${CH04_RESOURCES_AND_MEMORY}
-        ${CH05_DESCRIPTOR_SETS})
-add_executable(vkCookBook ${SOURCE_FILES})
+        ${CH05_DESCRIPTOR_SETS}
+        ${CH06_RENDER_PASSES_AND_FRAMEBUFFERS})
+add_executable(vkCookBook ${SOURCE_FILES} main.cpp)
