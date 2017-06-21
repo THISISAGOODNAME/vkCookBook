@@ -229,7 +229,28 @@ set(CH05_DESCRIPTOR_SETS
         book/CH05/CH05_Descriptor_Sets.h)
 
 set(CH06_RENDER_PASSES_AND_FRAMEBUFFERS
-        )
+        book/CH06/S01_Specifying_attachments_descriptions.cpp
+        book/CH06/S01_Specifying_attachments_descriptions.h
+        book/CH06/S02_Specifying_subpass_descriptions.cpp
+        book/CH06/S02_Specifying_subpass_descriptions.h
+        book/CH06/S03_Specifying_dependencies_between_subpasses.cpp
+        book/CH06/S03_Specifying_dependencies_between_subpasses.h
+        book/CH06/S04_Creating_a_render_pass.cpp
+        book/CH06/S04_Creating_a_render_pass.h
+        book/CH06/S05_Creating_a_framebuffer.cpp
+        book/CH06/S05_Creating_a_framebuffer.h
+        book/CH06/S06_Preparing_a_render_pass_for_geometry_rendering_and_postprocess_subpasses.cpp
+        book/CH06/S06_Preparing_a_render_pass_for_geometry_rendering_and_postprocess_subpasses.h
+        book/CH06/S07_Preparing_a_render_pass_and_a_framebuffer_with_color_and_depth_attachments.cpp
+        book/CH06/S07_Preparing_a_render_pass_and_a_framebuffer_with_color_and_depth_attachments.h
+        book/CH06/S08_Beginning_a_render_pass.cpp
+        book/CH06/S08_Beginning_a_render_pass.h
+        book/CH06/S09_Progressing_to_the_next_subpass.cpp
+        book/CH06/S09_Progressing_to_the_next_subpass.h
+        book/CH06/S10_Ending_a_render_pass.cpp
+        book/CH06/S10_Ending_a_render_pass.h
+        book/CH06/S11_Destroying_a_framebuffer.cpp
+        book/CH06/S11_Destroying_a_framebuffer.h book/CH06/S12_Destroying_a_render_pass.cpp book/CH06/S12_Destroying_a_render_pass.h book/CH06/CH06_Render_Passes_and_Framebuffers.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
