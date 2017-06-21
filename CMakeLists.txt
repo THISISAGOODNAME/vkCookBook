@@ -160,7 +160,30 @@ set(CH04_RESOURCES_AND_MEMORY
         book/CH04/S09_Creating_a_2D_image_and_view.cpp
         book/CH04/S09_Creating_a_2D_image_and_view.h
         book/CH04/S10_Creating_a_layered_2D_image_with_a_CUBEMAP_view.cpp
-        book/CH04/S10_Creating_a_layered_2D_image_with_a_CUBEMAP_view.h)
+        book/CH04/S10_Creating_a_layered_2D_image_with_a_CUBEMAP_view.h
+        book/CH04/S11_Mapping_updating_and_unmapping_host_visible_memory.cpp
+        book/CH04/S11_Mapping_updating_and_unmapping_host_visible_memory.h
+        book/CH04/S12_Copying_data_between_buffers.cpp
+        book/CH04/S12_Copying_data_between_buffers.h
+        book/CH04/S13_Copying_data_from_a_buffer_to_an_image.cpp
+        book/CH04/S13_Copying_data_from_a_buffer_to_an_image.h
+        book/CH04/S14_Copying_data_from_an_image_to_a_buffer.cpp
+        book/CH04/S14_Copying_data_from_an_image_to_a_buffer.h
+        book/CH04/S15_Using_staging_buffer_to_update_a_buffer_with_a_device_local_memory_bound.cpp
+        book/CH04/S15_Using_staging_buffer_to_update_a_buffer_with_a_device_local_memory_bound.h
+        book/CH04/S20_Freeing_a_memory_object.cpp
+        book/CH04/S20_Freeing_a_memory_object.h
+        book/CH04/S21_Destroying_a_buffer.cpp
+        book/CH04/S21_Destroying_a_buffer.h
+        book/CH04/S16_Using_staging_buffer_to_update_an_image_with_a_device_local_memory_bound.cpp
+        book/CH04/S16_Using_staging_buffer_to_update_an_image_with_a_device_local_memory_bound.h
+        book/CH04/S17_Destroying_an_image_view.cpp
+        book/CH04/S17_Destroying_an_image_view.h
+        book/CH04/S18_Destroying_an_image.cpp
+        book/CH04/S18_Destroying_an_image.h
+        book/CH04/S19_Destroying_a_buffer_view.cpp
+        book/CH04/S19_Destroying_a_buffer_view.h
+        book/CH04/CH04_Resources_and_Memory.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
