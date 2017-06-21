@@ -185,10 +185,53 @@ set(CH04_RESOURCES_AND_MEMORY
         book/CH04/S19_Destroying_a_buffer_view.h
         book/CH04/CH04_Resources_and_Memory.h)
 
+set(CH05_DESCRIPTOR_SETS
+        book/CH05/S01_Creating_a_sampler.cpp
+        book/CH05/S01_Creating_a_sampler.h
+        book/CH05/S02_Creating_a_sampled_image.cpp
+        book/CH05/S02_Creating_a_sampled_image.h
+        book/CH05/S03_Creating_a_combined_image_sampler.cpp
+        book/CH05/S03_Creating_a_combined_image_sampler.h
+        book/CH05/S04_Creating_a_storage_image.cpp
+        book/CH05/S04_Creating_a_storage_image.h
+        book/CH05/S05_Creating_a_uniform_texel_buffer.cpp
+        book/CH05/S05_Creating_a_uniform_texel_buffer.h
+        book/CH05/S06_Creating_a_storage_texel_buffer.cpp
+        book/CH05/S06_Creating_a_storage_texel_buffer.h
+        book/CH05/S07_Creating_a_uniform_buffer.cpp
+        book/CH05/S07_Creating_a_uniform_buffer.h
+        book/CH05/S08_Creating_a_storage_buffer.cpp
+        book/CH05/S08_Creating_a_storage_buffer.h
+        book/CH05/S09_Creating_an_input_attachment.cpp
+        book/CH05/S09_Creating_an_input_attachment.h
+        book/CH05/S10_Creating_a_descriptor_set_layout.cpp
+        book/CH05/S10_Creating_a_descriptor_set_layout.h
+        book/CH05/S11_Creating_a_descriptor_pool.cpp
+        book/CH05/S11_Creating_a_descriptor_pool.h
+        book/CH05/S12_Allocating_descriptor_sets.cpp
+        book/CH05/S12_Allocating_descriptor_sets.h
+        book/CH05/S13_Updating_descriptor_sets.cpp
+        book/CH05/S13_Updating_descriptor_sets.h
+        book/CH05/S14_Binding_descriptor_sets.cpp
+        book/CH05/S14_Binding_descriptor_sets.h
+        book/CH05/S15_Creating_descriptors_with_a_texture_and_a_uniform_buffer.cpp
+        book/CH05/S15_Creating_descriptors_with_a_texture_and_a_uniform_buffer.h
+        book/CH05/S16_Freeing_descriptor_sets.cpp
+        book/CH05/S16_Freeing_descriptor_sets.h
+        book/CH05/S17_Resetting_a_descriptor_pool.cpp
+        book/CH05/S17_Resetting_a_descriptor_pool.h
+        book/CH05/S18_Destroying_a_descriptor_pool.cpp
+        book/CH05/S18_Destroying_a_descriptor_pool.h
+        book/CH05/S19_Destroying_a_descriptor_set_layout.cpp
+        book/CH05/S19_Destroying_a_descriptor_set_layout.h
+        book/CH05/S20_Destroying_a_sampler.cpp
+        book/CH05/S20_Destroying_a_sampler.h book/CH05/CH05_Descriptor_Sets.h)
+
 set(SOURCE_FILES
         ${COMMON_FILES}
         ${CH01_INSTANCE_AND_DEVICES}
         ${CH02_IMAGE_PRESENTATION}
         ${CH03_COMMAND_BUFFERS_AND_SYNCHRONIZATION}
-        ${CH04_RESOURCES_AND_MEMORY})
+        ${CH04_RESOURCES_AND_MEMORY}
+        ${CH05_DESCRIPTOR_SETS})
 add_executable(vkCookBook ${SOURCE_FILES})
