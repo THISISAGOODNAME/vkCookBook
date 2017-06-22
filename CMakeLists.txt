@@ -19,7 +19,9 @@ set(COMMON_FILES
         book/common/Common.cpp
         book/common/Common.h
         book/common/VulkanDestroyer.cpp
-        book/common/VulkanDestroyer.h)
+        book/common/VulkanDestroyer.h
+        book/common/Tools.cpp
+        book/common/Tools.h)
 
 set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S03_Connecting_with_a_Vulkan_Loader_library.cpp
@@ -250,7 +252,65 @@ set(CH06_RENDER_PASSES_AND_FRAMEBUFFERS
         book/CH06/S10_Ending_a_render_pass.cpp
         book/CH06/S10_Ending_a_render_pass.h
         book/CH06/S11_Destroying_a_framebuffer.cpp
-        book/CH06/S11_Destroying_a_framebuffer.h book/CH06/S12_Destroying_a_render_pass.cpp book/CH06/S12_Destroying_a_render_pass.h book/CH06/CH06_Render_Passes_and_Framebuffers.h)
+        book/CH06/S11_Destroying_a_framebuffer.h
+        book/CH06/S12_Destroying_a_render_pass.cpp
+        book/CH06/S12_Destroying_a_render_pass.h
+        book/CH06/CH06_Render_Passes_and_Framebuffers.h)
+
+set(CH08_GRAPHICS_AND_COMPUTE_PIPELINES
+        book/CH08/S01_Creating_a_shader_module.cpp
+        book/CH08/S01_Creating_a_shader_module.h
+        book/CH08/S02_Specifying_pipeline_shader_stages.cpp
+        book/CH08/S02_Specifying_pipeline_shader_stages.h
+        book/CH08/S03_Specifying_pipeline_vertex_input_state.cpp
+        book/CH08/S03_Specifying_pipeline_vertex_input_state.h
+        book/CH08/S04_Specifying_pipeline_input_assembly_state.cpp
+        book/CH08/S04_Specifying_pipeline_input_assembly_state.h
+        book/CH08/S05_Specifying_pipeline_tessellation_state.cpp
+        book/CH08/S05_Specifying_pipeline_tessellation_state.h
+        book/CH08/S06_Specifying_pipeline_viewport_and_scissor_test_state.cpp
+        book/CH08/S06_Specifying_pipeline_viewport_and_scissor_test_state.h
+        book/CH08/S07_Specifying_pipeline_rasterization_state.cpp
+        book/CH08/S07_Specifying_pipeline_rasterization_state.h
+        book/CH08/S08_Specifying_pipeline_multisample_state.cpp
+        book/CH08/S08_Specifying_pipeline_multisample_state.h
+        book/CH08/S09_Specifying_pipeline_depth_and_stencil_state.cpp
+        book/CH08/S09_Specifying_pipeline_depth_and_stencil_state.h
+        book/CH08/S10_Specifying_pipeline_blend_state.cpp
+        book/CH08/S10_Specifying_pipeline_blend_state.h
+        book/CH08/S11_Specifying_pipeline_dynamic_states.cpp
+        book/CH08/S11_Specifying_pipeline_dynamic_states.h
+        book/CH08/S12_Creating_a_pipeline_layout.cpp
+        book/CH08/S12_Creating_a_pipeline_layout.h
+        book/CH08/S13_Specifying_graphics_pipeline_creation_parameters.cpp
+        book/CH08/S13_Specifying_graphics_pipeline_creation_parameters.h
+        book/CH08/S14_Creating_a_pipeline_cache_object.cpp
+        book/CH08/S14_Creating_a_pipeline_cache_object.h
+        book/CH08/S15_Retrieving_data_from_a_pipeline_cache.cpp
+        book/CH08/S15_Retrieving_data_from_a_pipeline_cache.h
+        book/CH08/S16_Merging_multiple_pipeline_cache_objects.cpp
+        book/CH08/S16_Merging_multiple_pipeline_cache_objects.h
+        book/CH08/S17_Creating_graphics_pipelines.cpp
+        book/CH08/S17_Creating_graphics_pipelines.h
+        book/CH08/S18_Creating_a_compute_pipeline.cpp
+        book/CH08/S18_Creating_a_compute_pipeline.h
+        book/CH08/S19_Binding_a_pipeline_object.cpp
+        book/CH08/S19_Binding_a_pipeline_object.h
+        book/CH08/S20_Creating_a_pipeline_layout_with_a_combined_image_sampler_a_buffer_and_push_constant_ranges.cpp
+        book/CH08/S20_Creating_a_pipeline_layout_with_a_combined_image_sampler_a_buffer_and_push_constant_ranges.h
+        book/CH08/S21_Creating_a_graphics_pipeline_with_vertex_and_fragment_shaders_depth_test_enabled_and_with_dynamic_viewport_and_scissor_tests.cpp
+        book/CH08/S21_Creating_a_graphics_pipeline_with_vertex_and_fragment_shaders_depth_test_enabled_and_with_dynamic_viewport_and_scissor_tests.h
+        book/CH08/S22_Creating_multiple_graphics_pipelines_on_multiple_threads.cpp
+        book/CH08/S22_Creating_multiple_graphics_pipelines_on_multiple_threads.h
+        book/CH08/S23_Destroying_a_pipeline.cpp
+        book/CH08/S23_Destroying_a_pipeline.h
+        book/CH08/S24_Destroying_a_pipeline_cache.cpp
+        book/CH08/S24_Destroying_a_pipeline_cache.h
+        book/CH08/S25_Destroying_a_pipeline_layout.cpp
+        book/CH08/S25_Destroying_a_pipeline_layout.h
+        book/CH08/S26_Destroying_a_shader_module.cpp
+        book/CH08/S26_Destroying_a_shader_module.h
+        book/CH08/CH08_Graphics_and_Compute_Pipelines.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
@@ -259,5 +319,6 @@ set(SOURCE_FILES
         ${CH03_COMMAND_BUFFERS_AND_SYNCHRONIZATION}
         ${CH04_RESOURCES_AND_MEMORY}
         ${CH05_DESCRIPTOR_SETS}
-        ${CH06_RENDER_PASSES_AND_FRAMEBUFFERS})
+        ${CH06_RENDER_PASSES_AND_FRAMEBUFFERS}
+        ${CH08_GRAPHICS_AND_COMPUTE_PIPELINES})
 add_executable(vkCookBook ${SOURCE_FILES} main.cpp)
