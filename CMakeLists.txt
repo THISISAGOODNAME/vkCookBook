@@ -312,6 +312,20 @@ set(CH08_GRAPHICS_AND_COMPUTE_PIPELINES
         book/CH08/S26_Destroying_a_shader_module.h
         book/CH08/CH08_Graphics_and_Compute_Pipelines.h)
 
+set(CH09_COMMAND_RECORDING_AND_DRAWING
+        book/CH09/S01_Clearing_a_color_image.cpp
+        book/CH09/S01_Clearing_a_color_image.h
+        book/CH09/S02_Clearing_a_depth_stencil_image.cpp
+        book/CH09/S02_Clearing_a_depth_stencil_image.h
+        book/CH09/S03_Clearing_render_pass_attachments.cpp
+        book/CH09/S03_Clearing_render_pass_attachments.h
+        book/CH09/S04_Binding_vertex_buffers.cpp
+        book/CH09/S04_Binding_vertex_buffers.h
+        book/CH09/S05_Binding_an_index_buffer.cpp
+        book/CH09/S05_Binding_an_index_buffer.h
+        book/CH09/S06_Providing_data_to_shaders_through_push_constants.cpp
+        book/CH09/S06_Providing_data_to_shaders_through_push_constants.h)
+
 set(SOURCE_FILES
         ${COMMON_FILES}
         ${CH01_INSTANCE_AND_DEVICES}
@@ -320,5 +334,6 @@ set(SOURCE_FILES
         ${CH04_RESOURCES_AND_MEMORY}
         ${CH05_DESCRIPTOR_SETS}
         ${CH06_RENDER_PASSES_AND_FRAMEBUFFERS}
-        ${CH08_GRAPHICS_AND_COMPUTE_PIPELINES})
+        ${CH08_GRAPHICS_AND_COMPUTE_PIPELINES}
+        ${CH09_COMMAND_RECORDING_AND_DRAWING})
 add_executable(vkCookBook ${SOURCE_FILES} main.cpp)
