@@ -1,9 +1,47 @@
 cmake_minimum_required(VERSION 3.7)
 project(vkCookBook)
 
-set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_STANDARD 11)
 
-include_directories(Include)
+set_property( GLOBAL PROPERTY USE_FOLDERS ON )
+set( CMAKE_SUPPRESS_REGENERATION true )
+
+if( CMAKE_BUILD_TYPE STREQUAL "" )
+    set( CMAKE_BUILD_TYPE "debug" )
+endif()
+
+if( NOT DEFINED VK_USE_PLATFORM )
+    if( WIN32 )
+        set( VK_USE_PLATFORM "WIN32" )
+    elseif( UNIX )
+        set( VK_USE_PLATFORM "XCB" )
+    endif()
+endif()
+
+add_definitions( -DVK_NO_PROTOTYPES )
+add_definitions( -DVK_USE_PLATFORM_${VK_USE_PLATFORM}_KHR )
+
+if( USE_PLATFORM STREQUAL "VK_USE_PLATFORM_WIN32_KHR" )
+    set( CMAKE_C_FLAGS_RELWITHDEBINFO    "${CMAKE_C_FLAGS_RELWITHDEBINFO} /MT" )
+    set( CMAKE_C_FLAGS_RELEASE           "${CMAKE_C_FLAGS_RELEASE} /MT" )
+    set( CMAKE_C_FLAGS_DEBUG             "${CMAKE_C_FLAGS_DEBUG} /MTd" )
+    set( CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MT" )
+    set( CMAKE_CXX_FLAGS_RELEASE         "${CMAKE_CXX_FLAGS_RELEASE} /MT" )
+    set( CMAKE_CXX_FLAGS_DEBUG           "${CMAKE_CXX_FLAGS_DEBUG} /MTd" )
+    set( PLATFORM_LIBRARY                "" )
+elseif( USE_PLATFORM STREQUAL "VK_USE_PLATFORM_XCB_KHR" )
+    add_definitions( -std=c++11 )
+    set( PLATFORM_LIBRARY dl xcb )
+elseif( USE_PLATFORM STREQUAL "VK_USE_PLATFORM_XLIB_KHR" )
+    add_definitions( -std=c++11 )
+    set( PLATFORM_LIBRARY dl X11 )
+endif()
+
+if( CMAKE_BUILD_TYPE STREQUAL "debug" )
+    add_definitions(-D_DEBUG)
+endif()
+
+include_directories(Include/vulkan)
 
 # Enabling validation layers
 if(NOT DEFINED ENV{VK_INSTANCE_LAYERS})
@@ -300,8 +338,8 @@ set(CH08_GRAPHICS_AND_COMPUTE_PIPELINES
         book/CH08/S19_Binding_a_pipeline_object.h
         book/CH08/S20_Creating_a_pipeline_layout_with_a_combined_image_sampler_a_buffer_and_push_constant_ranges.cpp
         book/CH08/S20_Creating_a_pipeline_layout_with_a_combined_image_sampler_a_buffer_and_push_constant_ranges.h
-        book/CH08/S21_Creating_a_graphics_pipeline_with_vertex_and_fragment_shaders_depth_test_enabled_and_with_dynamic_viewport_and_scissor_tests.cpp
-        book/CH08/S21_Creating_a_graphics_pipeline_with_vertex_and_fragment_shaders_depth_test_enabled_and_with_dynamic_viewport_and_scissor_tests.h
+        book/CH08/S21_Creating_pipeline_with_vertex_fragment_shaders_depth_test_enabled_with_dynamic_viewport_and_scissor_tests.cpp
+        book/CH08/S21_Creating_pipeline_with_vertex_fragment_shaders_depth_test_enabled_with_dynamic_viewport_and_scissor_tests.h
         book/CH08/S22_Creating_multiple_graphics_pipelines_on_multiple_threads.cpp
         book/CH08/S22_Creating_multiple_graphics_pipelines_on_multiple_threads.h
         book/CH08/S23_Destroying_a_pipeline.cpp
@@ -396,4 +434,20 @@ set(COMMON_FILES
 
 include_directories(Samples/Common)
 
-add_executable(vkCookBook ${LIB_FILES} main.cpp)
+# Shared Library
+add_library( CookbookLibrary ${LIB_FILES} )
+target_link_libraries( CookbookLibrary ${PLATFORM_LIBRARY} )
+
+# Step01-Creating_Logical_Device
+add_executable( Step01-Creating_Logical_Device Samples/Step01-Creating_Logical_Device.cpp ${COMMON_FILES})
+target_link_libraries( Step01-Creating_Logical_Device ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# Step02-Creating_Swapchain
+add_executable( Step02-Creating_Swapchain Samples/Step02-Creating_Swapchain.cpp ${COMMON_FILES})
+target_link_libraries( Step02-Creating_Swapchain ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# CH11 Lighting
+add_executable(01-Rendering_a_geometry_with_vertex_diffuse_lighting
+        ${COMMON_FILES}
+        Samples/CH11/S01-Rendering_a_geometry_with_vertex_diffuse_lighting.cpp)
+target_link_libraries( 01-Rendering_a_geometry_with_vertex_diffuse_lighting ${PLATFORM_LIBRARY} CookbookLibrary )

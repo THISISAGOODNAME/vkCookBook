@@ -25,7 +25,7 @@
 #include "S18_Creating_a_compute_pipeline.h"
 #include "S19_Binding_a_pipeline_object.h"
 #include "S20_Creating_a_pipeline_layout_with_a_combined_image_sampler_a_buffer_and_push_constant_ranges.h"
-#include "S21_Creating_a_graphics_pipeline_with_vertex_and_fragment_shaders_depth_test_enabled_and_with_dynamic_viewport_and_scissor_tests.h"
+#include "S21_Creating_pipeline_with_vertex_fragment_shaders_depth_test_enabled_with_dynamic_viewport_and_scissor_tests.h"
 #include "S22_Creating_multiple_graphics_pipelines_on_multiple_threads.h"
 #include "S23_Destroying_a_pipeline.h"
 #include "S24_Destroying_a_pipeline_cache.h"

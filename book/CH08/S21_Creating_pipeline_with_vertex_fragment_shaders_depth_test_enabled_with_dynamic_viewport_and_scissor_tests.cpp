@@ -20,7 +20,7 @@
 #include "S11_Specifying_pipeline_dynamic_states.h"
 #include "S13_Specifying_graphics_pipeline_creation_parameters.h"
 #include "S17_Creating_graphics_pipelines.h"
-#include "S21_Creating_a_graphics_pipeline_with_vertex_and_fragment_shaders_depth_test_enabled_and_with_dynamic_viewport_and_scissor_tests.h"
+#include "S21_Creating_pipeline_with_vertex_fragment_shaders_depth_test_enabled_with_dynamic_viewport_and_scissor_tests.h"
 
 namespace VKCookbook {
 

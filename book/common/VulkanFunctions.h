@@ -9,7 +9,7 @@
 #define VKCOOKBOOK_VULKANFUNCTIONS_H
 
 //#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
+#include <vulkan.h>
 
 namespace VKCookbook {
 
