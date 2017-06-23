@@ -22,7 +22,8 @@ set(COMMON_FILES
         book/common/VulkanDestroyer.cpp
         book/common/VulkanDestroyer.h
         book/common/Tools.cpp
-        book/common/Tools.h)
+        book/common/Tools.h
+        book/common/All_Lib.h)
 
 set(CH01_INSTANCE_AND_DEVICES
         book/CH01/S03_Connecting_with_a_Vulkan_Loader_library.cpp
