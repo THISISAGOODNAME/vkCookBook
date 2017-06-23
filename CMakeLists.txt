@@ -372,7 +372,7 @@ set(CH10_HELPER_RECIPES
         book/CH10/S06_Loading_texture_data_from_a_file.h
         book/CH10/CH10_Helper_Recipes.h)
 
-set(SOURCE_FILES
+set(LIB_FILES
         ${COMMON_FILES}
         ${CH01_INSTANCE_AND_DEVICES}
         ${CH02_IMAGE_PRESENTATION}
@@ -383,4 +383,17 @@ set(SOURCE_FILES
         ${CH08_GRAPHICS_AND_COMPUTE_PIPELINES}
         ${CH09_COMMAND_RECORDING_AND_DRAWING}
         ${CH10_HELPER_RECIPES})
-add_executable(vkCookBook ${SOURCE_FILES} main.cpp)
+
+set(COMMON_FILES
+        Samples/Common/Camera.cpp
+        Samples/Common/Camera.h
+        Samples/Common/OrbitingCamera.cpp
+        Samples/Common/OrbitingCamera.h
+        Samples/Common/CookbookSampleFramework.cpp
+        Samples/Common/CookbookSampleFramework.h
+        Samples/Common/OS.cpp
+        Samples/Common/OS.h)
+
+include_directories(Samples/Common)
+
+add_executable(vkCookBook ${LIB_FILES} main.cpp)
