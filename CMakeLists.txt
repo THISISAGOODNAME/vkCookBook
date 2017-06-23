@@ -356,7 +356,20 @@ set(CH09_COMMAND_RECORDING_AND_DRAWING
 
 set(CH10_HELPER_RECIPES
         book/CH10/S07_Loading_a_3D_model_from_an_OBJ_file.cpp
-        book/CH10/S07_Loading_a_3D_model_from_an_OBJ_file.h)
+        book/CH10/S07_Loading_a_3D_model_from_an_OBJ_file.h
+        book/CH10/S01_reparing_a_translation_matrix.cpp
+        book/CH10/S01_reparing_a_translation_matrix.h
+        book/CH10/S02_Preparing_a_rotation_matrix.cpp
+        book/CH10/S02_Preparing_a_rotation_matrix.h
+        book/CH10/S03_Preparing_a_scaling_matrix.cpp
+        book/CH10/S03_Preparing_a_scaling_matrix.h
+        book/CH10/S04_Preparing_a_perspective_projection_matrix.cpp
+        book/CH10/S04_Preparing_a_perspective_projection_matrix.h
+        book/CH10/S05_Preparing_an_orthographic_projection_matrix.cpp
+        book/CH10/S05_Preparing_an_orthographic_projection_matrix.h
+        book/CH10/S06_Loading_texture_data_from_a_file.cpp
+        book/CH10/S06_Loading_texture_data_from_a_file.h
+        book/CH10/CH10_Helper_Recipes.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
