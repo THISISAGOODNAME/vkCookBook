@@ -11,6 +11,7 @@ if(NOT DEFINED ENV{VK_INSTANCE_LAYERS})
 endif()
 
 include_directories(book/common)
+include_directories(3rd_party/include)
 
 set(COMMON_FILES
         book/common/ListOfVulkanFunctions.inl
@@ -324,7 +325,38 @@ set(CH09_COMMAND_RECORDING_AND_DRAWING
         book/CH09/S05_Binding_an_index_buffer.cpp
         book/CH09/S05_Binding_an_index_buffer.h
         book/CH09/S06_Providing_data_to_shaders_through_push_constants.cpp
-        book/CH09/S06_Providing_data_to_shaders_through_push_constants.h)
+        book/CH09/S06_Providing_data_to_shaders_through_push_constants.h
+        book/CH09/S07_Setting_viewport_state_dynamically.cpp
+        book/CH09/S07_Setting_viewport_state_dynamically.h
+        book/CH09/S08_Setting_scissor_state_dynamically.cpp
+        book/CH09/S08_Setting_scissor_state_dynamically.h
+        book/CH09/S09_Setting_line_width_state_dynamically.cpp
+        book/CH09/S09_Setting_line_width_state_dynamically.h
+        book/CH09/S10_Setting_depth_bias_state_dynamically.cpp
+        book/CH09/S10_Setting_depth_bias_state_dynamically.h
+        book/CH09/S11_Setting_blend_constants_state_dynamically.cpp
+        book/CH09/S11_Setting_blend_constants_state_dynamically.h
+        book/CH09/S12_Drawing_a_geometry.cpp
+        book/CH09/S12_Drawing_a_geometry.h
+        book/CH09/S13_Drawing_an_indexed_geometry.cpp
+        book/CH09/S13_Drawing_an_indexed_geometry.h
+        book/CH09/S14_Dispatching_compute_work.cpp
+        book/CH09/S14_Dispatching_compute_work.h
+        book/CH09/S15_Executing_secondary_command_buffer_inside_a_primary_command_buffer.cpp
+        book/CH09/S15_Executing_secondary_command_buffer_inside_a_primary_command_buffer.h
+        book/CH09/S16_Recording_a_command_buffer_that_draws_a_geometry_with_dynamic_viewport_and_scissor_states.cpp
+        book/CH09/S16_Recording_a_command_buffer_that_draws_a_geometry_with_dynamic_viewport_and_scissor_states.h
+        book/CH09/S17_Recording_command_buffers_on_multiple_threads.cpp
+        book/CH09/S17_Recording_command_buffers_on_multiple_threads.h
+        book/CH09/S18_Preparing_a_single_frame_of_animation.cpp
+        book/CH09/S18_Preparing_a_single_frame_of_animation.h
+        book/CH09/S19_Increasing_the_performance_through_increasing_the_number_of_separately_rendered_frames.cpp
+        book/CH09/S19_Increasing_the_performance_through_increasing_the_number_of_separately_rendered_frames.h
+        book/CH09/CH09_Command_Recording_and_Drawing.h)
+
+set(CH10_HELPER_RECIPES
+        book/CH10/S07_Loading_a_3D_model_from_an_OBJ_file.cpp
+        book/CH10/S07_Loading_a_3D_model_from_an_OBJ_file.h)
 
 set(SOURCE_FILES
         ${COMMON_FILES}
@@ -335,5 +367,6 @@ set(SOURCE_FILES
         ${CH05_DESCRIPTOR_SETS}
         ${CH06_RENDER_PASSES_AND_FRAMEBUFFERS}
         ${CH08_GRAPHICS_AND_COMPUTE_PIPELINES}
-        ${CH09_COMMAND_RECORDING_AND_DRAWING})
+        ${CH09_COMMAND_RECORDING_AND_DRAWING}
+        ${CH10_HELPER_RECIPES})
 add_executable(vkCookBook ${SOURCE_FILES} main.cpp)
