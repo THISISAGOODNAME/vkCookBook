@@ -450,6 +450,10 @@ target_link_libraries( Step02-Creating_Swapchain ${PLATFORM_LIBRARY} CookbookLib
 add_executable( Step03-Using_Render_Passes ${COMMON_FILES} Samples/Step03-Using_Render_Passes.cpp)
 target_link_libraries( Step03-Using_Render_Passes ${PLATFORM_LIBRARY} CookbookLibrary )
 
+# Step04-Using_Graphics_Pipeline
+add_executable( Step04-Using_Graphics_Pipeline ${COMMON_FILES} Samples/Step04-Using_Graphics_Pipeline.cpp)
+target_link_libraries( Step04-Using_Graphics_Pipeline ${PLATFORM_LIBRARY} CookbookLibrary )
+
 # CH11 Lighting
 add_executable(01-Rendering_a_geometry_with_vertex_diffuse_lighting
         ${COMMON_FILES}
