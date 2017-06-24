@@ -446,6 +446,10 @@ target_link_libraries( Step01-Creating_Logical_Device ${PLATFORM_LIBRARY} Cookbo
 add_executable( Step02-Creating_Swapchain Samples/Step02-Creating_Swapchain.cpp ${COMMON_FILES})
 target_link_libraries( Step02-Creating_Swapchain ${PLATFORM_LIBRARY} CookbookLibrary )
 
+# Step03-Using_Render_Passes
+add_executable( Step03-Using_Render_Passes ${COMMON_FILES} Samples/Step03-Using_Render_Passes.cpp)
+target_link_libraries( Step03-Using_Render_Passes ${PLATFORM_LIBRARY} CookbookLibrary )
+
 # CH11 Lighting
 add_executable(01-Rendering_a_geometry_with_vertex_diffuse_lighting
         ${COMMON_FILES}
