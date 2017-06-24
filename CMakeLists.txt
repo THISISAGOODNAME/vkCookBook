@@ -458,6 +458,10 @@ target_link_libraries( Step04-Using_Graphics_Pipeline ${PLATFORM_LIBRARY} Cookbo
 add_executable( Step05-Using_Combined_Image_Samplers ${COMMON_FILES} Samples/Step05-Using_Combined_Image_Samplers.cpp)
 target_link_libraries( Step05-Using_Combined_Image_Samplers ${PLATFORM_LIBRARY} CookbookLibrary )
 
+# Step06-Using_Uniform_Buffers
+add_executable( Step06-Using_Uniform_Buffers ${COMMON_FILES} Samples/Step06-Using_Uniform_Buffers.cpp)
+target_link_libraries( Step06-Using_Uniform_Buffers ${PLATFORM_LIBRARY} CookbookLibrary )
+
 # CH11 Lighting
 add_executable(01-Rendering_a_geometry_with_vertex_diffuse_lighting
         ${COMMON_FILES}
