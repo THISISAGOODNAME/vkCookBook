@@ -454,6 +454,10 @@ target_link_libraries( Step03-Using_Render_Passes ${PLATFORM_LIBRARY} CookbookLi
 add_executable( Step04-Using_Graphics_Pipeline ${COMMON_FILES} Samples/Step04-Using_Graphics_Pipeline.cpp)
 target_link_libraries( Step04-Using_Graphics_Pipeline ${PLATFORM_LIBRARY} CookbookLibrary )
 
+# Step05-Using_Combined_Image_Samplers
+add_executable( Step05-Using_Combined_Image_Samplers ${COMMON_FILES} Samples/Step05-Using_Combined_Image_Samplers.cpp)
+target_link_libraries( Step05-Using_Combined_Image_Samplers ${PLATFORM_LIBRARY} CookbookLibrary )
+
 # CH11 Lighting
 add_executable(01-Rendering_a_geometry_with_vertex_diffuse_lighting
         ${COMMON_FILES}
