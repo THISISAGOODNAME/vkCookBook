@@ -474,6 +474,22 @@ target_link_libraries( Step07-Using_Push_Constants ${PLATFORM_LIBRARY} CookbookL
 add_executable( Step08-Using_Tessellation_Shaders ${COMMON_FILES} Samples/Step08-Using_Tessellation_Shaders.cpp)
 target_link_libraries( Step08-Using_Tessellation_Shaders ${PLATFORM_LIBRARY} CookbookLibrary )
 
+# Step09-Using_Geometry_Shaders
+add_executable( Step09-Using_Geometry_Shaders ${COMMON_FILES} Samples/Step09-Using_Geometry_Shaders.cpp)
+target_link_libraries( Step09-Using_Geometry_Shaders ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# Step10-Using_Compute_Shaders
+add_executable( Step10-Using_Compute_Shaders ${COMMON_FILES} Samples/Step10-Using_Compute_Shaders.cpp)
+target_link_libraries( Step10-Using_Compute_Shaders ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# Step11-Drawing_Vertex_Normals
+add_executable( Step11-Drawing_Vertex_Normals ${COMMON_FILES} Samples/Step11-Drawing_Vertex_Normals.cpp)
+target_link_libraries( Step11-Drawing_Vertex_Normals ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# Step12-Using_Depth_Attachments
+add_executable( Step12-Using_Depth_Attachments ${COMMON_FILES} Samples/Step12-Using_Depth_Attachments.cpp)
+target_link_libraries( Step12-Using_Depth_Attachments ${PLATFORM_LIBRARY} CookbookLibrary )
+
 # CH11 Lighting
 add_executable(01-Rendering_a_geometry_with_vertex_diffuse_lighting
         ${COMMON_FILES}
