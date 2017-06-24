@@ -470,6 +470,10 @@ target_link_libraries( Step06-Using_Uniform_Buffers ${PLATFORM_LIBRARY} Cookbook
 add_executable( Step07-Using_Push_Constants ${COMMON_FILES} Samples/Step07-Using_Push_Constants.cpp)
 target_link_libraries( Step07-Using_Push_Constants ${PLATFORM_LIBRARY} CookbookLibrary )
 
+# Step08-Using_Tessellation_Shaders
+add_executable( Step08-Using_Tessellation_Shaders ${COMMON_FILES} Samples/Step08-Using_Tessellation_Shaders.cpp)
+target_link_libraries( Step08-Using_Tessellation_Shaders ${PLATFORM_LIBRARY} CookbookLibrary )
+
 # CH11 Lighting
 add_executable(01-Rendering_a_geometry_with_vertex_diffuse_lighting
         ${COMMON_FILES}
