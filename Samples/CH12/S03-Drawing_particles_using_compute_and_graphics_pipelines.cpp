@@ -1,64 +1,112 @@
 //
-// Created by aicdg on 2017/6/23.
+// Created by aicdg on 2017/6/24.
 //
 
 //
-// Chapter: 11 Lighting
-// Recipe:  01 Rendering a geometry with vertex diffuse lighting
+// Chapter: 12 Advanced Rendering Techniques
+// Recipe:  03 Drawing particles using compute and graphics pipelines
 
 #include "CookbookSampleFramework.h"
+#include "OrbitingCamera.h"
 
 using namespace VKCookbook;
 
 class Sample : public VulkanCookbookSample {
-    Mesh                                Model;
-    VkDestroyer<VkBuffer>               VertexBuffer;
-    VkDestroyer<VkDeviceMemory>         VertexBufferMemory;
+    VkDestroyer<VkCommandPool>                      ComputeCommandPool;
+    VkCommandBuffer                                 ComputeCommandBuffer;
+    VkDestroyer<VkSemaphore>                        ComputeSemaphore;
+    VkDestroyer<VkFence>                            ComputeFence;
 
-    VkDestroyer<VkDescriptorSetLayout>  DescriptorSetLayout;
-    VkDestroyer<VkDescriptorPool>       DescriptorPool;
-    std::vector<VkDescriptorSet>        DescriptorSets;
+    const uint32_t                                  PARTICLES_COUNT = 2000;
+    VkDestroyer<VkBuffer>                           VertexBuffer;
+    VkDestroyer<VkDeviceMemory>                     VertexBufferMemory;
+    VkDestroyer<VkBufferView>                       VertexBufferView;
 
-    VkDestroyer<VkRenderPass>           RenderPass;
-    VkDestroyer<VkPipelineLayout>       PipelineLayout;
-    VkDestroyer<VkPipeline>             Pipeline;
+    bool                                            UpdateUniformBuffer;
+    VkDestroyer<VkBuffer>                           UniformBuffer;
+    VkDestroyer<VkDeviceMemory>                     UniformBufferMemory;
 
-    VkDestroyer<VkBuffer>               StagingBuffer;
-    VkDestroyer<VkDeviceMemory>         StagingBufferMemory;
-    bool                                UpdateUniformBuffer;
-    VkDestroyer<VkBuffer>               UniformBuffer;
-    VkDestroyer<VkDeviceMemory>         UniformBufferMemory;
+    std::vector<VkDestroyer<VkDescriptorSetLayout>> DescriptorSetLayout;
+    VkDestroyer<VkDescriptorPool>                   DescriptorPool;
+    std::vector<VkDescriptorSet>                    DescriptorSets;
+
+    VkDestroyer<VkPipelineLayout>                   ComputePipelineLayout;
+    VkDestroyer<VkPipeline>                         ComputePipeline;
+
+    VkDestroyer<VkRenderPass>                       RenderPass;
+    VkDestroyer<VkPipelineLayout>                   GraphicsPipelineLayout;
+    VkDestroyer<VkPipeline>                         GraphicsPipeline;
+
+    VkDestroyer<VkBuffer>                           StagingBuffer;
+    VkDestroyer<VkDeviceMemory>                     StagingBufferMemory;
+
+    OrbitingCamera                                  Camera;
+
+
+    static const VkFormat DepthFormat = VK_FORMAT_D16_UNORM;
 
     virtual bool Initialize( WindowParameters WindowParameters ) override {
-        if( !InitializeVulkan( WindowParameters ) ) {
+        VkPhysicalDeviceFeatures device_features = {};
+        device_features.geometryShader = true;
+
+        if( !InitializeVulkan( WindowParameters, &device_features ) ) {
             return false;
         }
 
-        // Vertex data
-        if( !Load3DModelFromObjFile( "Data/Models/teapot.obj", true, false, false, true, Model ) ) {
+        Camera = OrbitingCamera( Vector3{ 0.0f, 0.0f, 0.0f }, 4.0f );
+
+        // Compute command buffer creation
+
+        InitVkDestroyer( LogicalDevice, ComputeCommandPool );
+        if( !CreateCommandPool( *LogicalDevice, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, ComputeQueue.FamilyIndex, *ComputeCommandPool ) ) {
             return false;
         }
 
-        InitVkDestroyer( LogicalDevice, VertexBuffer );
-        if( !CreateBuffer( *LogicalDevice, sizeof( Model.Data[0] ) * Model.Data.size(),
-                           VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, *VertexBuffer ) ) {
+        std::vector<VkCommandBuffer> command_buffers;
+        if( !AllocateCommandBuffers( *LogicalDevice, *ComputeCommandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1, command_buffers ) ) {
             return false;
         }
+        ComputeCommandBuffer = command_buffers[0];
 
-        InitVkDestroyer( LogicalDevice, VertexBufferMemory );
-        if( !AllocateAndBindMemoryObjectToBuffer( PhysicalDevice, *LogicalDevice, *VertexBuffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *VertexBufferMemory ) ) {
-            return false;
-        }
+        // Vertex buffer / storage texel buffer
 
-        if( !UseStagingBufferToUpdateBufferWithDeviceLocalMemoryBound( PhysicalDevice, *LogicalDevice, sizeof( Model.Data[0] ) * Model.Data.size(),
-                                                                       &Model.Data[0], *VertexBuffer, 0, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
-                                                                       GraphicsQueue.Handle, FrameResources.front().CommandBuffer, {} ) ) {
-            return false;
+        {
+            std::vector<float> particles;
+
+            for( uint32_t i = 0; i < PARTICLES_COUNT; ++i ) {
+                OrbitingCamera particle( { 0.0f, 0.0f, 0.0f }, 1.5f, static_cast<float>((std::rand() % 181) - 90), static_cast<float>((std::rand() % 51) - 25) );
+                Vector3 position = particle.GetPosition();
+                Vector3 color = 0.0075f * Vector3{
+                        250.0f - std::abs( particle.GetVerticalAngle() * 10.0f ),
+                        static_cast<float>(std::rand() % 61 + 40),
+                        static_cast<float>(std::rand() % 61)
+                };
+                float speed = 0.5f + 0.01f * static_cast<float>(std::rand() % 101) + color[0] * 0.5f;
+                particles.insert( particles.end(), position.begin(), position.end() );
+                particles.push_back( 1.0f );
+                particles.insert( particles.end(), color.begin(), color.end() );
+                particles.push_back( speed );
+            }
+
+            InitVkDestroyer( LogicalDevice, VertexBuffer );
+            InitVkDestroyer( LogicalDevice, VertexBufferMemory );
+            InitVkDestroyer( LogicalDevice, VertexBufferView );
+            if( !CreateStorageTexelBuffer( PhysicalDevice, *LogicalDevice, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof( particles[0] ) * particles.size(),
+                                           VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT, false,
+                                           *VertexBuffer, *VertexBufferMemory, *VertexBufferView ) ) {
+                return false;
+            }
+
+            if( !UseStagingBufferToUpdateBufferWithDeviceLocalMemoryBound( PhysicalDevice, *LogicalDevice, sizeof( particles[0] ) * particles.size(),
+                                                                           &particles[0], *VertexBuffer, 0, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                                                                           GraphicsQueue.Handle, FrameResources.front().CommandBuffer, {} ) ) {
+                return false;
+            }
         }
 
         // Staging buffer
         InitVkDestroyer( LogicalDevice, StagingBuffer );
-        if( !CreateBuffer( *LogicalDevice, 2 * 16 * sizeof(float), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, *StagingBuffer ) ) {
+        if( !CreateBuffer( *LogicalDevice, 2 * 16 * sizeof( float ), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, *StagingBuffer ) ) {
             return false;
         }
         InitVkDestroyer( LogicalDevice, StagingBufferMemory );
@@ -78,29 +126,52 @@ class Sample : public VulkanCookbookSample {
             return false;
         }
 
-        // Descriptor set with uniform buffer
-        VkDescriptorSetLayoutBinding descriptor_set_layout_binding = {
-                0,                                          // uint32_t             binding
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     descriptorType
-                1,                                          // uint32_t             descriptorCount
-                VK_SHADER_STAGE_VERTEX_BIT,                 // VkShaderStageFlags   stageFlags
-                nullptr                                     // const VkSampler    * pImmutableSamplers
+        // Descriptor sets with uniform buffer
+
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings = {
+                {
+                        0,                                          // uint32_t             binding
+                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     descriptorType
+                        1,                                          // uint32_t             descriptorCount
+                        VK_SHADER_STAGE_VERTEX_BIT |                // VkShaderStageFlags   stageFlags
+                        VK_SHADER_STAGE_GEOMETRY_BIT,
+                        nullptr                                     // const VkSampler    * pImmutableSamplers
+                },
+                {
+                        0,                                          // uint32_t             binding
+                        VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,    // VkDescriptorType     descriptorType
+                        1,                                          // uint32_t             descriptorCount
+                        VK_SHADER_STAGE_COMPUTE_BIT,                // VkShaderStageFlags   stageFlags
+                        nullptr                                     // const VkSampler    * pImmutableSamplers
+                }
         };
-        InitVkDestroyer( LogicalDevice, DescriptorSetLayout );
-        if( !CreateDescriptorSetLayout( *LogicalDevice, { descriptor_set_layout_binding }, *DescriptorSetLayout ) ) {
+
+        DescriptorSetLayout.resize( 2 );
+        InitVkDestroyer( LogicalDevice, DescriptorSetLayout[0] );
+        InitVkDestroyer( LogicalDevice, DescriptorSetLayout[1] );
+        if( !CreateDescriptorSetLayout( *LogicalDevice, { descriptor_set_layout_bindings[0] }, *DescriptorSetLayout[0] ) ) {
+            return false;
+        }
+        if( !CreateDescriptorSetLayout( *LogicalDevice, { descriptor_set_layout_bindings[1] }, *DescriptorSetLayout[1] ) ) {
             return false;
         }
 
-        VkDescriptorPoolSize descriptor_pool_size = {
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     type
-                1                                           // uint32_t             descriptorCount
+        std::vector<VkDescriptorPoolSize> descriptor_pool_sizes = {
+                {
+                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     type
+                        1                                           // uint32_t             descriptorCount
+                },
+                {
+                        VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,    // VkDescriptorType     type
+                        1                                           // uint32_t             descriptorCount
+                }
         };
         InitVkDestroyer( LogicalDevice, DescriptorPool );
-        if( !CreateDescriptorPool( *LogicalDevice, false, 1, { descriptor_pool_size }, *DescriptorPool ) ) {
+        if( !CreateDescriptorPool( *LogicalDevice, false, 2, descriptor_pool_sizes, *DescriptorPool ) ) {
             return false;
         }
 
-        if( !AllocateDescriptorSets( *LogicalDevice, *DescriptorPool, { *DescriptorSetLayout }, DescriptorSets ) ) {
+        if( !AllocateDescriptorSets( *LogicalDevice, *DescriptorPool, { *DescriptorSetLayout[0], *DescriptorSetLayout[1] }, DescriptorSets ) ) {
             return false;
         }
 
@@ -118,7 +189,19 @@ class Sample : public VulkanCookbookSample {
                 }
         };
 
-        UpdateDescriptorSets( *LogicalDevice, {}, { buffer_descriptor_update }, {}, {} );
+        TexelBufferDescriptorInfo storage_texel_buffer_descriptor_update = {
+                DescriptorSets[1],                          // VkDescriptorSet                      TargetDescriptorSet
+                0,                                          // uint32_t                             TargetDescriptorBinding
+                0,                                          // uint32_t                             TargetArrayElement
+                VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,    // VkDescriptorType                     TargetDescriptorType
+                {                                           // std::vector<VkBufferView>            TexelBufferViews
+                        {
+                                *VertexBufferView
+                        }
+                }
+        };
+
+        UpdateDescriptorSets( *LogicalDevice, {}, { buffer_descriptor_update }, { storage_texel_buffer_descriptor_update }, {} );
 
         // Render pass
         std::vector<VkAttachmentDescription> attachment_descriptions = {
@@ -148,7 +231,7 @@ class Sample : public VulkanCookbookSample {
 
         VkAttachmentReference depth_attachment = {
                 1,                                                // uint32_t                             attachment
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL  // VkImageLayout                        layout
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL  // VkImageLayout                        layout;
         };
 
         std::vector<SubpassParameters> subpass_parameters = {
@@ -193,15 +276,50 @@ class Sample : public VulkanCookbookSample {
             return false;
         }
 
-        // Graphics pipeline
+        // Compute pipeline
 
-        InitVkDestroyer( LogicalDevice, PipelineLayout );
-        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout }, {}, *PipelineLayout ) ) {
+        std::vector<unsigned char> compute_shader_spirv;
+        if( !GetBinaryFileContents( "Data/Shaders/12 Advanced Rendering Techniques/03 Drawing particles using compute and graphics pipelines/shader.comp.spv", compute_shader_spirv ) ) {
             return false;
         }
 
+        VkDestroyer<VkShaderModule> compute_shader_module( LogicalDevice );
+        if( !CreateShaderModule( *LogicalDevice, compute_shader_spirv, *compute_shader_module ) ) {
+            return false;
+        }
+
+        std::vector<ShaderStageParameters> compute_shader_stage_params = {
+                {
+                        VK_SHADER_STAGE_COMPUTE_BIT,      // VkShaderStageFlagBits        ShaderStage
+                        *compute_shader_module,           // VkShaderModule               ShaderModule
+                        "main",                           // char const                 * EntryPointName
+                        nullptr                           // VkSpecializationInfo const * SpecializationInfo
+                }
+        };
+
+        std::vector<VkPipelineShaderStageCreateInfo> compute_shader_stage_create_infos;
+        SpecifyPipelineShaderStages( compute_shader_stage_params, compute_shader_stage_create_infos );
+
+        VkPushConstantRange push_constant_range = {
+                VK_SHADER_STAGE_COMPUTE_BIT,    // VkShaderStageFlags     stageFlags
+                0,                              // uint32_t               offset
+                sizeof( float )                 // uint32_t               size
+        };
+
+        InitVkDestroyer( LogicalDevice, ComputePipelineLayout );
+        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout[1] }, { push_constant_range }, *ComputePipelineLayout ) ) {
+            return false;
+        }
+
+        InitVkDestroyer( LogicalDevice, ComputePipeline );
+        if( !CreateComputePipeline( *LogicalDevice, 0, compute_shader_stage_create_infos[0], *ComputePipelineLayout, VK_NULL_HANDLE, VK_NULL_HANDLE, *ComputePipeline ) ) {
+            return false;
+        }
+
+        // Graphics pipeline
+
         std::vector<unsigned char> vertex_shader_spirv;
-        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/01 Rendering a geometry with vertex diffuse lighting/shader.vert.spv", vertex_shader_spirv ) ) {
+        if( !GetBinaryFileContents( "Data/Shaders/12 Advanced Rendering Techniques/03 Drawing particles using compute and graphics pipelines/shader.vert.spv", vertex_shader_spirv ) ) {
             return false;
         }
 
@@ -210,8 +328,18 @@ class Sample : public VulkanCookbookSample {
             return false;
         }
 
+        std::vector<unsigned char> geometry_shader_spirv;
+        if( !GetBinaryFileContents( "Data/Shaders/12 Advanced Rendering Techniques/03 Drawing particles using compute and graphics pipelines/shader.geom.spv", geometry_shader_spirv ) ) {
+            return false;
+        }
+
+        VkDestroyer<VkShaderModule> geometry_shader_module( LogicalDevice );
+        if( !CreateShaderModule( *LogicalDevice, geometry_shader_spirv, *geometry_shader_module ) ) {
+            return false;
+        }
+
         std::vector<unsigned char> fragment_shader_spirv;
-        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/01 Rendering a geometry with vertex diffuse lighting/shader.frag.spv", fragment_shader_spirv ) ) {
+        if( !GetBinaryFileContents( "Data/Shaders/12 Advanced Rendering Techniques/03 Drawing particles using compute and graphics pipelines/shader.frag.spv", fragment_shader_spirv ) ) {
             return false;
         }
         VkDestroyer<VkShaderModule> fragment_shader_module( LogicalDevice );
@@ -223,8 +351,14 @@ class Sample : public VulkanCookbookSample {
                 {
                         VK_SHADER_STAGE_VERTEX_BIT,       // VkShaderStageFlagBits        ShaderStage
                         *vertex_shader_module,            // VkShaderModule               ShaderModule
-                        "main",                           // char const                 * EntryPointName
-                        nullptr                           // VkSpecializationInfo const * SpecializationInfo
+                        "main",                           // char const                 * EntryPointName;
+                        nullptr                           // VkSpecializationInfo const * SpecializationInfo;
+                },
+                {
+                        VK_SHADER_STAGE_GEOMETRY_BIT,     // VkShaderStageFlagBits        ShaderStage
+                        *geometry_shader_module,          // VkShaderModule               ShaderModule
+                        "main",                           // char const                 * EntryPointName;
+                        nullptr                           // VkSpecializationInfo const * SpecializationInfo;
                 },
                 {
                         VK_SHADER_STAGE_FRAGMENT_BIT,     // VkShaderStageFlagBits        ShaderStage
@@ -240,23 +374,23 @@ class Sample : public VulkanCookbookSample {
         std::vector<VkVertexInputBindingDescription> vertex_input_binding_descriptions = {
                 {
                         0,                            // uint32_t                     binding
-                        6 * sizeof( float ),          // uint32_t                     stride
+                        8 * sizeof( float ),          // uint32_t                     stride
                         VK_VERTEX_INPUT_RATE_VERTEX   // VkVertexInputRate            inputRate
                 }
         };
 
         std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions = {
                 {
-                        0,                                                                        // uint32_t   location
-                        0,                                                                        // uint32_t   binding
-                        VK_FORMAT_R32G32B32_SFLOAT,                                               // VkFormat   format
-                        0                                                                         // uint32_t   offset
+                        0,                              // uint32_t   location
+                        0,                              // uint32_t   binding
+                        VK_FORMAT_R32G32B32A32_SFLOAT,  // VkFormat   format
+                        0                               // uint32_t   offset
                 },
                 {
-                        1,                                                                        // uint32_t   location
-                        0,                                                                        // uint32_t   binding
-                        VK_FORMAT_R32G32B32_SFLOAT,                                               // VkFormat   format
-                        3 * sizeof( float )                                                       // uint32_t   offset
+                        1,                              // uint32_t   location
+                        0,                              // uint32_t   binding
+                        VK_FORMAT_R32G32B32A32_SFLOAT,  // VkFormat   format
+                        4 * sizeof( float )             // uint32_t   offset
                 }
         };
 
@@ -264,7 +398,7 @@ class Sample : public VulkanCookbookSample {
         SpecifyPipelineVertexInputState( vertex_input_binding_descriptions, vertex_attribute_descriptions, vertex_input_state_create_info );
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly_state_create_info;
-        SpecifyPipelineInputAssemblyState( VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, input_assembly_state_create_info );
+        SpecifyPipelineInputAssemblyState( VK_PRIMITIVE_TOPOLOGY_POINT_LIST, false, input_assembly_state_create_info );
 
         ViewportInfo viewport_infos = {
                 {                     // std::vector<VkViewport>   Viewports
@@ -300,18 +434,18 @@ class Sample : public VulkanCookbookSample {
         SpecifyPipelineMultisampleState( VK_SAMPLE_COUNT_1_BIT, false, 0.0f, nullptr, false, false, multisample_state_create_info );
 
         VkPipelineDepthStencilStateCreateInfo depth_stencil_state_create_info;
-        SpecifyPipelineDepthAndStencilState( true, true, VK_COMPARE_OP_LESS_OR_EQUAL, false, 0.0f, 1.0f, false, {}, {}, depth_stencil_state_create_info );
+        SpecifyPipelineDepthAndStencilState( true, false, VK_COMPARE_OP_LESS_OR_EQUAL, false, 0.0f, 1.0f, false, {}, {}, depth_stencil_state_create_info );
 
         std::vector<VkPipelineColorBlendAttachmentState> attachment_blend_states = {
                 {
-                        false,                          // VkBool32                 blendEnable
-                        VK_BLEND_FACTOR_ONE,            // VkBlendFactor            srcColorBlendFactor
-                        VK_BLEND_FACTOR_ONE,            // VkBlendFactor            dstColorBlendFactor
-                        VK_BLEND_OP_ADD,                // VkBlendOp                colorBlendOp
-                        VK_BLEND_FACTOR_ONE,            // VkBlendFactor            srcAlphaBlendFactor
-                        VK_BLEND_FACTOR_ONE,            // VkBlendFactor            dstAlphaBlendFactor
-                        VK_BLEND_OP_ADD,                // VkBlendOp                alphaBlendOp
-                        VK_COLOR_COMPONENT_R_BIT |      // VkColorComponentFlags    colorWriteMask
+                        true,                                 // VkBool32                 blendEnable
+                        VK_BLEND_FACTOR_SRC_ALPHA,            // VkBlendFactor            srcColorBlendFactor
+                        VK_BLEND_FACTOR_ONE,                  // VkBlendFactor            dstColorBlendFactor
+                        VK_BLEND_OP_ADD,                      // VkBlendOp                colorBlendOp
+                        VK_BLEND_FACTOR_ONE,                  // VkBlendFactor            srcAlphaBlendFactor
+                        VK_BLEND_FACTOR_ONE,                  // VkBlendFactor            dstAlphaBlendFactor
+                        VK_BLEND_OP_ADD,                      // VkBlendOp                alphaBlendOp
+                        VK_COLOR_COMPONENT_R_BIT |            // VkColorComponentFlags    colorWriteMask
                         VK_COLOR_COMPONENT_G_BIT |
                         VK_COLOR_COMPONENT_B_BIT |
                         VK_COLOR_COMPONENT_A_BIT
@@ -327,21 +461,74 @@ class Sample : public VulkanCookbookSample {
         VkPipelineDynamicStateCreateInfo dynamic_state_create_info;
         SpecifyPipelineDynamicStates( dynamic_states, dynamic_state_create_info );
 
+        InitVkDestroyer( LogicalDevice, GraphicsPipelineLayout );
+        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout[0] }, {}, *GraphicsPipelineLayout ) ) {
+            return false;
+        }
+
         VkGraphicsPipelineCreateInfo pipeline_create_info;
         SpecifyGraphicsPipelineCreationParameters( 0, shader_stage_create_infos, vertex_input_state_create_info, input_assembly_state_create_info,
                                                    nullptr, &viewport_state_create_info, rasterization_state_create_info, &multisample_state_create_info, &depth_stencil_state_create_info, &blend_state_create_info,
-                                                   &dynamic_state_create_info, *PipelineLayout, *RenderPass, 0, VK_NULL_HANDLE, -1, pipeline_create_info );
+                                                   &dynamic_state_create_info, *GraphicsPipelineLayout, *RenderPass, 0, VK_NULL_HANDLE, -1, pipeline_create_info );
 
-        std::vector<VkPipeline> pipeline;
-        if( !CreateGraphicsPipelines( *LogicalDevice, { pipeline_create_info }, VK_NULL_HANDLE, pipeline ) ) {
+        std::vector<VkPipeline> graphics_pipeline;
+        if( !CreateGraphicsPipelines( *LogicalDevice, { pipeline_create_info }, VK_NULL_HANDLE, graphics_pipeline ) ) {
             return false;
         }
-        InitVkDestroyer( LogicalDevice, pipeline[0], Pipeline );
+        InitVkDestroyer( LogicalDevice, graphics_pipeline[0], GraphicsPipeline );
+
+        InitVkDestroyer( LogicalDevice, ComputeSemaphore );
+        if( !CreateSemaphore( *LogicalDevice, *ComputeSemaphore ) ) {
+            return false;
+        }
+
+        InitVkDestroyer( LogicalDevice, ComputeFence );
+        if( !CreateFence( *LogicalDevice, true, *ComputeFence ) ) {
+            return false;
+        }
 
         return true;
     }
 
     virtual bool Draw() override {
+        // Record command buffer with compute shader dispatch
+
+        WaitSemaphoreInfo wait_semaphore_info = {
+                *ComputeSemaphore,                  // VkSemaphore            Semaphore
+                VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, // VkPipelineStageFlags   WaitingStage
+        };
+
+        if( !WaitForFences( *LogicalDevice, { *ComputeFence }, VK_FALSE, 2000000000 ) ) {
+            return false;
+        }
+
+        if( !ResetFences( *LogicalDevice, { *ComputeFence } ) ) {
+            return false;
+        }
+
+        if( !BeginCommandBufferRecordingOperation( ComputeCommandBuffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr ) ) {
+            return false;
+        }
+
+        BindDescriptorSets( ComputeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *ComputePipelineLayout, 0, { DescriptorSets[1] }, {} );
+
+        BindPipelineObject( ComputeCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, *ComputePipeline );
+
+        float time = TimerState.GetDeltaTime();
+        ProvideDataToShadersThroughPushConstants( ComputeCommandBuffer, *ComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof( float ), &time );
+
+        DispatchComputeWork( ComputeCommandBuffer, PARTICLES_COUNT / 32 + 1, 1, 1 );
+
+        if( !EndCommandBufferRecordingOperation( ComputeCommandBuffer ) ) {
+            return false;
+        }
+
+        if( !SubmitCommandBuffersToQueue( ComputeQueue.Handle, {}, { ComputeCommandBuffer }, { *ComputeSemaphore }, *ComputeFence ) ) {
+            return false;
+        }
+
+        // Prepare drawing function
+
         auto prepare_frame = [&]( VkCommandBuffer command_buffer, uint32_t swapchain_image_index, VkFramebuffer framebuffer ) {
             if( !BeginCommandBufferRecordingOperation( command_buffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr ) ) {
                 return false;
@@ -361,9 +548,9 @@ class Sample : public VulkanCookbookSample {
 
                 std::vector<VkBufferCopy> regions = {
                         {
-                                0,                        // VkDeviceSize     srcOffset
-                                0,                        // VkDeviceSize     dstOffset
-                                2 * 16 * sizeof( float )  // VkDeviceSize     size
+                                0,                          // VkDeviceSize     srcOffset
+                                0,                          // VkDeviceSize     dstOffset
+                                2 * 16 * sizeof( float )    // VkDeviceSize     size
                         }
                 };
                 CopyDataBetweenBuffers( command_buffer, *StagingBuffer, *UniformBuffer, regions );
@@ -375,7 +562,7 @@ class Sample : public VulkanCookbookSample {
                         VK_QUEUE_FAMILY_IGNORED,      // uint32_t         CurrentQueueFamily
                         VK_QUEUE_FAMILY_IGNORED       // uint32_t         NewQueueFamily
                 };
-                SetBufferMemoryBarrier( command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, { post_transfer_transition } );
+                SetBufferMemoryBarrier( command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, { post_transfer_transition } );
             }
 
             if( PresentQueue.FamilyIndex != GraphicsQueue.FamilyIndex ) {
@@ -393,7 +580,7 @@ class Sample : public VulkanCookbookSample {
             }
 
             // Drawing
-            BeginRenderPass( command_buffer, *RenderPass, framebuffer, { { 0, 0 }, Swapchain.Size }, { { 0.1f, 0.2f, 0.3f, 1.0f }, { 1.0f, 0 } }, VK_SUBPASS_CONTENTS_INLINE );
+            BeginRenderPass( command_buffer, *RenderPass, framebuffer, { { 0, 0 }, Swapchain.Size }, { { 0.1f, 0.2f, 0.3f, 1.0f },{ 1.0f, 0 } }, VK_SUBPASS_CONTENTS_INLINE );
 
             VkViewport viewport = {
                     0.0f,                                       // float    x
@@ -419,13 +606,11 @@ class Sample : public VulkanCookbookSample {
 
             BindVertexBuffers( command_buffer, 0, { { *VertexBuffer, 0 } } );
 
-            BindDescriptorSets( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *PipelineLayout, 0, DescriptorSets, {} );
+            BindDescriptorSets( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *GraphicsPipelineLayout, 0, { DescriptorSets[0] }, {} );
 
-            BindPipelineObject( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *Pipeline );
+            BindPipelineObject( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *GraphicsPipeline );
 
-            for( size_t i = 0; i < Model.Parts.size(); ++i ) {
-                DrawGeometry( command_buffer, Model.Parts[i].VertexCount, 1, Model.Parts[i].VertexOffset, 0 );
-            }
+            DrawGeometry( command_buffer, PARTICLES_COUNT, 1, 0, 0 );
 
             EndRenderPass( command_buffer );
 
@@ -450,7 +635,7 @@ class Sample : public VulkanCookbookSample {
         };
 
         return IncreasePerformanceThroughIncreasingTheNumberOfSeparatelyRenderedFrames( *LogicalDevice, GraphicsQueue.Handle, PresentQueue.Handle,
-                                                                                        *Swapchain.Handle, Swapchain.Size, Swapchain.ImageViewsRaw, *RenderPass, {}, prepare_frame, FrameResources );
+                                                                                        *Swapchain.Handle, Swapchain.Size, Swapchain.ImageViewsRaw, *RenderPass, { wait_semaphore_info }, prepare_frame, FrameResources );
     }
 
     void OnMouseEvent() {
@@ -458,23 +643,16 @@ class Sample : public VulkanCookbookSample {
     }
 
     bool UpdateStagingBuffer( bool force ) {
-        UpdateUniformBuffer = true;
-        static float horizontal_angle = 0.0f;
-        static float vertical_angle = 0.0f;
-        if( MouseState.Buttons[0].IsPressed ||
-            force ) {
-            horizontal_angle += 0.5f * MouseState.Position.Delta.X;
-            vertical_angle -= 0.5f * MouseState.Position.Delta.Y;
-            if( vertical_angle > 90.0f ) {
-                vertical_angle = 90.0f;
-            }
-            if( vertical_angle < -90.0f ) {
-                vertical_angle = -90.0f;
-            }
+        if( MouseState.Buttons[0].IsPressed ) {
+            Camera.RotateHorizontally( 0.5f * MouseState.Position.Delta.X );
+            Camera.RotateVertically( -0.5f * MouseState.Position.Delta.Y );
+            force = true;
+        }
 
-            Matrix4x4 rotation_matrix = PrepareRotationMatrix( vertical_angle, { 1.0f, 0.0f, 0.0f } ) * PrepareRotationMatrix( horizontal_angle, { 0.0f, -1.0f, 0.0f } );
-            Matrix4x4 translation_matrix = PrepareTranslationMatrix( 0.0f, 0.0f, -4.0f );
-            Matrix4x4 model_view_matrix = translation_matrix * rotation_matrix;
+        if( force ) {
+            UpdateUniformBuffer = true;
+
+            Matrix4x4 model_view_matrix = Camera.GetMatrix();
 
             if( !MapUpdateAndUnmapHostVisibleMemory( *LogicalDevice, *StagingBufferMemory, 0, sizeof( model_view_matrix[0] ) * model_view_matrix.size(), &model_view_matrix[0], true, nullptr ) ) {
                 return false;
@@ -506,4 +684,4 @@ class Sample : public VulkanCookbookSample {
 
 };
 
-VULKAN_COOKBOOK_SAMPLE_FRAMEWORK( "11/01 - Rendering a geometry with vertex diffuse lighting", 50, 25, 800, 600, Sample )
+VULKAN_COOKBOOK_SAMPLE_FRAMEWORK( "12/03 - Drawing particles using compute and graphics pipelines", 50, 25, 800, 600, Sample )

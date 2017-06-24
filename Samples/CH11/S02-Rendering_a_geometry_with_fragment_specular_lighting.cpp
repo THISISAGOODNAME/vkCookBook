@@ -1,10 +1,10 @@
 //
-// Created by aicdg on 2017/6/23.
+// Created by aicdg on 2017/6/24.
 //
 
 //
 // Chapter: 11 Lighting
-// Recipe:  01 Rendering a geometry with vertex diffuse lighting
+// Recipe:  02 Rendering a geometry with fragment specular lighting
 
 #include "CookbookSampleFramework.h"
 
@@ -195,13 +195,20 @@ class Sample : public VulkanCookbookSample {
 
         // Graphics pipeline
 
+        std::vector<VkPushConstantRange> push_constant_ranges = {
+                {
+                        VK_SHADER_STAGE_FRAGMENT_BIT,   // VkShaderStageFlags     stageFlags
+                        0,                              // uint32_t               offset
+                        sizeof( float ) * 4             // uint32_t               size
+                }
+        };
         InitVkDestroyer( LogicalDevice, PipelineLayout );
-        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout }, {}, *PipelineLayout ) ) {
+        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout }, push_constant_ranges, *PipelineLayout ) ) {
             return false;
         }
 
         std::vector<unsigned char> vertex_shader_spirv;
-        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/01 Rendering a geometry with vertex diffuse lighting/shader.vert.spv", vertex_shader_spirv ) ) {
+        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/02 Rendering a geometry with fragment specular lighting/shader.vert.spv", vertex_shader_spirv ) ) {
             return false;
         }
 
@@ -211,7 +218,7 @@ class Sample : public VulkanCookbookSample {
         }
 
         std::vector<unsigned char> fragment_shader_spirv;
-        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/01 Rendering a geometry with vertex diffuse lighting/shader.frag.spv", fragment_shader_spirv ) ) {
+        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/02 Rendering a geometry with fragment specular lighting/shader.frag.spv", fragment_shader_spirv ) ) {
             return false;
         }
         VkDestroyer<VkShaderModule> fragment_shader_module( LogicalDevice );
@@ -223,8 +230,8 @@ class Sample : public VulkanCookbookSample {
                 {
                         VK_SHADER_STAGE_VERTEX_BIT,       // VkShaderStageFlagBits        ShaderStage
                         *vertex_shader_module,            // VkShaderModule               ShaderModule
-                        "main",                           // char const                 * EntryPointName
-                        nullptr                           // VkSpecializationInfo const * SpecializationInfo
+                        "main",                           // char const                 * EntryPointName;
+                        nullptr                           // VkSpecializationInfo const * SpecializationInfo;
                 },
                 {
                         VK_SHADER_STAGE_FRAGMENT_BIT,     // VkShaderStageFlagBits        ShaderStage
@@ -423,6 +430,9 @@ class Sample : public VulkanCookbookSample {
 
             BindPipelineObject( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *Pipeline );
 
+            std::array<float, 4> light_position = { 5.0f, 5.0f, 0.0f, 0.0f };
+            ProvideDataToShadersThroughPushConstants( command_buffer, *PipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof( float ) * 4, &light_position[0] );
+
             for( size_t i = 0; i < Model.Parts.size(); ++i ) {
                 DrawGeometry( command_buffer, Model.Parts[i].VertexCount, 1, Model.Parts[i].VertexOffset, 0 );
             }
@@ -506,4 +516,4 @@ class Sample : public VulkanCookbookSample {
 
 };
 
-VULKAN_COOKBOOK_SAMPLE_FRAMEWORK( "11/01 - Rendering a geometry with vertex diffuse lighting", 50, 25, 800, 600, Sample )
+VULKAN_COOKBOOK_SAMPLE_FRAMEWORK( "11/02 - Rendering a geometry with fragment specular lighting", 50, 25, 800, 600, Sample )

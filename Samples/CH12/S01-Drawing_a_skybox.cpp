@@ -1,19 +1,28 @@
 //
-// Created by aicdg on 2017/6/23.
+// Created by aicdg on 2017/6/24.
 //
 
 //
-// Chapter: 11 Lighting
-// Recipe:  01 Rendering a geometry with vertex diffuse lighting
+// Chapter: 12 Advanced Rendering Techniques
+// Recipe:  01 Drawing a skybox
 
 #include "CookbookSampleFramework.h"
 
 using namespace VKCookbook;
 
 class Sample : public VulkanCookbookSample {
-    Mesh                                Model;
+    Mesh                                Skybox;
     VkDestroyer<VkBuffer>               VertexBuffer;
     VkDestroyer<VkDeviceMemory>         VertexBufferMemory;
+
+    bool                                UpdateUniformBuffer;
+    VkDestroyer<VkBuffer>               UniformBuffer;
+    VkDestroyer<VkDeviceMemory>         UniformBufferMemory;
+
+    VkDestroyer<VkImage>                CubemapImage;
+    VkDestroyer<VkDeviceMemory>         CubemapImageMemory;
+    VkDestroyer<VkSampler>              CubemapSampler;
+    VkDestroyer<VkImageView>            CubemapImageView;
 
     VkDestroyer<VkDescriptorSetLayout>  DescriptorSetLayout;
     VkDestroyer<VkDescriptorPool>       DescriptorPool;
@@ -25,9 +34,8 @@ class Sample : public VulkanCookbookSample {
 
     VkDestroyer<VkBuffer>               StagingBuffer;
     VkDestroyer<VkDeviceMemory>         StagingBufferMemory;
-    bool                                UpdateUniformBuffer;
-    VkDestroyer<VkBuffer>               UniformBuffer;
-    VkDestroyer<VkDeviceMemory>         UniformBufferMemory;
+
+    static const VkFormat DepthFormat = VK_FORMAT_D16_UNORM;
 
     virtual bool Initialize( WindowParameters WindowParameters ) override {
         if( !InitializeVulkan( WindowParameters ) ) {
@@ -35,12 +43,12 @@ class Sample : public VulkanCookbookSample {
         }
 
         // Vertex data
-        if( !Load3DModelFromObjFile( "Data/Models/teapot.obj", true, false, false, true, Model ) ) {
+        if( !Load3DModelFromObjFile( "Data/Models/cube.obj", false, false, false, false, Skybox ) ) {
             return false;
         }
 
         InitVkDestroyer( LogicalDevice, VertexBuffer );
-        if( !CreateBuffer( *LogicalDevice, sizeof( Model.Data[0] ) * Model.Data.size(),
+        if( !CreateBuffer( *LogicalDevice, sizeof( Skybox.Data[0] ) * Skybox.Data.size(),
                            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, *VertexBuffer ) ) {
             return false;
         }
@@ -50,8 +58,8 @@ class Sample : public VulkanCookbookSample {
             return false;
         }
 
-        if( !UseStagingBufferToUpdateBufferWithDeviceLocalMemoryBound( PhysicalDevice, *LogicalDevice, sizeof( Model.Data[0] ) * Model.Data.size(),
-                                                                       &Model.Data[0], *VertexBuffer, 0, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+        if( !UseStagingBufferToUpdateBufferWithDeviceLocalMemoryBound( PhysicalDevice, *LogicalDevice, sizeof( Skybox.Data[0] ) * Skybox.Data.size(),
+                                                                       &Skybox.Data[0], *VertexBuffer, 0, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
                                                                        GraphicsQueue.Handle, FrameResources.front().CommandBuffer, {} ) ) {
             return false;
         }
@@ -78,25 +86,80 @@ class Sample : public VulkanCookbookSample {
             return false;
         }
 
-        // Descriptor set with uniform buffer
-        VkDescriptorSetLayoutBinding descriptor_set_layout_binding = {
-                0,                                          // uint32_t             binding
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     descriptorType
-                1,                                          // uint32_t             descriptorCount
-                VK_SHADER_STAGE_VERTEX_BIT,                 // VkShaderStageFlags   stageFlags
-                nullptr                                     // const VkSampler    * pImmutableSamplers
-        };
-        InitVkDestroyer( LogicalDevice, DescriptorSetLayout );
-        if( !CreateDescriptorSetLayout( *LogicalDevice, { descriptor_set_layout_binding }, *DescriptorSetLayout ) ) {
+        // Cubemap
+        InitVkDestroyer( LogicalDevice, CubemapImage );
+        InitVkDestroyer( LogicalDevice, CubemapImageMemory );
+        InitVkDestroyer( LogicalDevice, CubemapImageView );
+        InitVkDestroyer( LogicalDevice, CubemapSampler );
+        if( !CreateCombinedImageSampler( PhysicalDevice, *LogicalDevice, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, { 1024, 1024, 1 }, 1, 6,
+                                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_VIEW_TYPE_CUBE, VK_IMAGE_ASPECT_COLOR_BIT, VK_FILTER_LINEAR,
+                                         VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                                         VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, 0.0f, false, 1.0f, false, VK_COMPARE_OP_ALWAYS, 0.0f, 1.0f, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK,
+                                         false, *CubemapSampler, *CubemapImage, *CubemapImageMemory, *CubemapImageView ) ) {
             return false;
         }
 
-        VkDescriptorPoolSize descriptor_pool_size = {
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     type
-                1                                           // uint32_t             descriptorCount
+        std::vector<std::string> cubemap_images = {
+                "Data/Textures/Skansen/posx.jpg",
+                "Data/Textures/Skansen/negx.jpg",
+                "Data/Textures/Skansen/posy.jpg",
+                "Data/Textures/Skansen/negy.jpg",
+                "Data/Textures/Skansen/posz.jpg",
+                "Data/Textures/Skansen/negz.jpg"
+        };
+
+        for( size_t i = 0; i < cubemap_images.size(); ++i ) {
+            std::vector<unsigned char> cubemap_image_data;
+            int image_data_size;
+            if( !LoadTextureDataFromFile( cubemap_images[i].c_str(), 4, cubemap_image_data, nullptr, nullptr, nullptr, &image_data_size ) ) {
+                return false;
+            }
+            VkImageSubresourceLayers image_subresource = {
+                    VK_IMAGE_ASPECT_COLOR_BIT,    // VkImageAspectFlags     aspectMask
+                    0,                            // uint32_t               mipLevel
+                    static_cast<uint32_t>(i),     // uint32_t               baseArrayLayer
+                    1                             // uint32_t               layerCount
+            };
+            UseStagingBufferToUpdateImageWithDeviceLocalMemoryBound( PhysicalDevice, *LogicalDevice, image_data_size, &cubemap_image_data[0],
+                                                                     *CubemapImage, image_subresource, { 0, 0, 0 }, { 1024, 1024, 1 }, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                     0, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_ASPECT_COLOR_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                                                     GraphicsQueue.Handle, FrameResources.front().CommandBuffer, {} );
+        }
+
+        // Descriptor set with uniform buffer
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings = {
+                {
+                        0,                                          // uint32_t             binding
+                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     descriptorType
+                        1,                                          // uint32_t             descriptorCount
+                        VK_SHADER_STAGE_VERTEX_BIT,                 // VkShaderStageFlags   stageFlags
+                        nullptr                                     // const VkSampler    * pImmutableSamplers
+                },
+                {
+                        1,                                          // uint32_t             binding
+                        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,  // VkDescriptorType     descriptorType
+                        1,                                          // uint32_t             descriptorCount
+                        VK_SHADER_STAGE_FRAGMENT_BIT,               // VkShaderStageFlags   stageFlags
+                        nullptr                                     // const VkSampler    * pImmutableSamplers
+                }
+        };
+        InitVkDestroyer( LogicalDevice, DescriptorSetLayout );
+        if( !CreateDescriptorSetLayout( *LogicalDevice, descriptor_set_layout_bindings, *DescriptorSetLayout ) ) {
+            return false;
+        }
+
+        std::vector<VkDescriptorPoolSize> descriptor_pool_sizes = {
+                {
+                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     type
+                        1                                           // uint32_t             descriptorCount
+                },
+                {
+                        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,  // VkDescriptorType     type
+                        1                                           // uint32_t             descriptorCount
+                }
         };
         InitVkDestroyer( LogicalDevice, DescriptorPool );
-        if( !CreateDescriptorPool( *LogicalDevice, false, 1, { descriptor_pool_size }, *DescriptorPool ) ) {
+        if( !CreateDescriptorPool( *LogicalDevice, false, 1, descriptor_pool_sizes, *DescriptorPool ) ) {
             return false;
         }
 
@@ -118,7 +181,21 @@ class Sample : public VulkanCookbookSample {
                 }
         };
 
-        UpdateDescriptorSets( *LogicalDevice, {}, { buffer_descriptor_update }, {}, {} );
+        ImageDescriptorInfo image_descriptor_update = {
+                DescriptorSets[0],                          // VkDescriptorSet                      TargetDescriptorSet
+                1,                                          // uint32_t                             TargetDescriptorBinding
+                0,                                          // uint32_t                             TargetArrayElement
+                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,  // VkDescriptorType                     TargetDescriptorType
+                {                                           // std::vector<VkDescriptorImageInfo>   ImageInfos
+                        {
+                                *CubemapSampler,                          // VkSampler                            sampler
+                                *CubemapImageView,                        // VkImageView                          imageView
+                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL  // VkImageLayout                        imageLayout
+                        }
+                }
+        };
+
+        UpdateDescriptorSets( *LogicalDevice, { image_descriptor_update }, { buffer_descriptor_update }, {}, {} );
 
         // Render pass
         std::vector<VkAttachmentDescription> attachment_descriptions = {
@@ -148,7 +225,7 @@ class Sample : public VulkanCookbookSample {
 
         VkAttachmentReference depth_attachment = {
                 1,                                                // uint32_t                             attachment
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL  // VkImageLayout                        layout
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL  // VkImageLayout                        layout;
         };
 
         std::vector<SubpassParameters> subpass_parameters = {
@@ -195,13 +272,9 @@ class Sample : public VulkanCookbookSample {
 
         // Graphics pipeline
 
-        InitVkDestroyer( LogicalDevice, PipelineLayout );
-        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout }, {}, *PipelineLayout ) ) {
-            return false;
-        }
-
+        // Model
         std::vector<unsigned char> vertex_shader_spirv;
-        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/01 Rendering a geometry with vertex diffuse lighting/shader.vert.spv", vertex_shader_spirv ) ) {
+        if( !GetBinaryFileContents( "Data/Shaders/12 Advanced Rendering Techniques/01 Skybox/shader.vert.spv", vertex_shader_spirv ) ) {
             return false;
         }
 
@@ -211,7 +284,7 @@ class Sample : public VulkanCookbookSample {
         }
 
         std::vector<unsigned char> fragment_shader_spirv;
-        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/01 Rendering a geometry with vertex diffuse lighting/shader.frag.spv", fragment_shader_spirv ) ) {
+        if( !GetBinaryFileContents( "Data/Shaders/12 Advanced Rendering Techniques/01 Skybox/shader.frag.spv", fragment_shader_spirv ) ) {
             return false;
         }
         VkDestroyer<VkShaderModule> fragment_shader_module( LogicalDevice );
@@ -223,8 +296,8 @@ class Sample : public VulkanCookbookSample {
                 {
                         VK_SHADER_STAGE_VERTEX_BIT,       // VkShaderStageFlagBits        ShaderStage
                         *vertex_shader_module,            // VkShaderModule               ShaderModule
-                        "main",                           // char const                 * EntryPointName
-                        nullptr                           // VkSpecializationInfo const * SpecializationInfo
+                        "main",                           // char const                 * EntryPointName;
+                        nullptr                           // VkSpecializationInfo const * SpecializationInfo;
                 },
                 {
                         VK_SHADER_STAGE_FRAGMENT_BIT,     // VkShaderStageFlagBits        ShaderStage
@@ -240,7 +313,7 @@ class Sample : public VulkanCookbookSample {
         std::vector<VkVertexInputBindingDescription> vertex_input_binding_descriptions = {
                 {
                         0,                            // uint32_t                     binding
-                        6 * sizeof( float ),          // uint32_t                     stride
+                        3 * sizeof( float ),          // uint32_t                     stride
                         VK_VERTEX_INPUT_RATE_VERTEX   // VkVertexInputRate            inputRate
                 }
         };
@@ -251,12 +324,6 @@ class Sample : public VulkanCookbookSample {
                         0,                                                                        // uint32_t   binding
                         VK_FORMAT_R32G32B32_SFLOAT,                                               // VkFormat   format
                         0                                                                         // uint32_t   offset
-                },
-                {
-                        1,                                                                        // uint32_t   location
-                        0,                                                                        // uint32_t   binding
-                        VK_FORMAT_R32G32B32_SFLOAT,                                               // VkFormat   format
-                        3 * sizeof( float )                                                       // uint32_t   offset
                 }
         };
 
@@ -294,7 +361,7 @@ class Sample : public VulkanCookbookSample {
         SpecifyPipelineViewportAndScissorTestState( viewport_infos, viewport_state_create_info );
 
         VkPipelineRasterizationStateCreateInfo rasterization_state_create_info;
-        SpecifyPipelineRasterizationState( false, false, VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, false, 0.0f, 1.0f, 0.0f, 1.0f, rasterization_state_create_info );
+        SpecifyPipelineRasterizationState( false, false, VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, false, 0.0f, 1.0f, 0.0f, 1.0f, rasterization_state_create_info );
 
         VkPipelineMultisampleStateCreateInfo multisample_state_create_info;
         SpecifyPipelineMultisampleState( VK_SAMPLE_COUNT_1_BIT, false, 0.0f, nullptr, false, false, multisample_state_create_info );
@@ -326,6 +393,11 @@ class Sample : public VulkanCookbookSample {
         };
         VkPipelineDynamicStateCreateInfo dynamic_state_create_info;
         SpecifyPipelineDynamicStates( dynamic_states, dynamic_state_create_info );
+
+        InitVkDestroyer( LogicalDevice, PipelineLayout );
+        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout }, {}, *PipelineLayout ) ) {
+            return false;
+        }
 
         VkGraphicsPipelineCreateInfo pipeline_create_info;
         SpecifyGraphicsPipelineCreationParameters( 0, shader_stage_create_infos, vertex_input_state_create_info, input_assembly_state_create_info,
@@ -375,14 +447,14 @@ class Sample : public VulkanCookbookSample {
                         VK_QUEUE_FAMILY_IGNORED,      // uint32_t         CurrentQueueFamily
                         VK_QUEUE_FAMILY_IGNORED       // uint32_t         NewQueueFamily
                 };
-                SetBufferMemoryBarrier( command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, { post_transfer_transition } );
+                SetBufferMemoryBarrier( command_buffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, { post_transfer_transition } );
             }
 
             if( PresentQueue.FamilyIndex != GraphicsQueue.FamilyIndex ) {
                 ImageTransition image_transition_before_drawing = {
                         Swapchain.Images[swapchain_image_index],  // VkImage              Image
                         VK_ACCESS_MEMORY_READ_BIT,                // VkAccessFlags        CurrentAccess
-                        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,     // VkAccessFlags        NewAccess
+                        VK_ACCESS_MEMORY_READ_BIT,                // VkAccessFlags        NewAccess
                         VK_IMAGE_LAYOUT_UNDEFINED,                // VkImageLayout        CurrentLayout
                         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, // VkImageLayout        NewLayout
                         PresentQueue.FamilyIndex,                 // uint32_t             CurrentQueueFamily
@@ -423,8 +495,8 @@ class Sample : public VulkanCookbookSample {
 
             BindPipelineObject( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *Pipeline );
 
-            for( size_t i = 0; i < Model.Parts.size(); ++i ) {
-                DrawGeometry( command_buffer, Model.Parts[i].VertexCount, 1, Model.Parts[i].VertexOffset, 0 );
+            for( size_t i = 0; i < Skybox.Parts.size(); ++i ) {
+                DrawGeometry( command_buffer, Skybox.Parts[i].VertexCount, 1, Skybox.Parts[i].VertexOffset, 0 );
             }
 
             EndRenderPass( command_buffer );
@@ -432,7 +504,7 @@ class Sample : public VulkanCookbookSample {
             if( PresentQueue.FamilyIndex != GraphicsQueue.FamilyIndex ) {
                 ImageTransition image_transition_before_present = {
                         Swapchain.Images[swapchain_image_index],  // VkImage              Image
-                        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,     // VkAccessFlags        CurrentAccess
+                        VK_ACCESS_MEMORY_READ_BIT,                // VkAccessFlags        CurrentAccess
                         VK_ACCESS_MEMORY_READ_BIT,                // VkAccessFlags        NewAccess
                         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,          // VkImageLayout        CurrentLayout
                         VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,          // VkImageLayout        NewLayout
@@ -472,9 +544,7 @@ class Sample : public VulkanCookbookSample {
                 vertical_angle = -90.0f;
             }
 
-            Matrix4x4 rotation_matrix = PrepareRotationMatrix( vertical_angle, { 1.0f, 0.0f, 0.0f } ) * PrepareRotationMatrix( horizontal_angle, { 0.0f, -1.0f, 0.0f } );
-            Matrix4x4 translation_matrix = PrepareTranslationMatrix( 0.0f, 0.0f, -4.0f );
-            Matrix4x4 model_view_matrix = translation_matrix * rotation_matrix;
+            Matrix4x4 model_view_matrix = PrepareRotationMatrix( vertical_angle, { 1.0f, 0.0f, 0.0f } ) * PrepareRotationMatrix( horizontal_angle, { 0.0f, -1.0f, 0.0f } );
 
             if( !MapUpdateAndUnmapHostVisibleMemory( *LogicalDevice, *StagingBufferMemory, 0, sizeof( model_view_matrix[0] ) * model_view_matrix.size(), &model_view_matrix[0], true, nullptr ) ) {
                 return false;
@@ -506,4 +576,4 @@ class Sample : public VulkanCookbookSample {
 
 };
 
-VULKAN_COOKBOOK_SAMPLE_FRAMEWORK( "11/01 - Rendering a geometry with vertex diffuse lighting", 50, 25, 800, 600, Sample )
+VULKAN_COOKBOOK_SAMPLE_FRAMEWORK( "12/01 - Drawing a skybox", 50, 25, 800, 600, Sample )

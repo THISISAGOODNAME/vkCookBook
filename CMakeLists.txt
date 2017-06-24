@@ -491,7 +491,47 @@ add_executable( Step12-Using_Depth_Attachments ${COMMON_FILES} Samples/Step12-Us
 target_link_libraries( Step12-Using_Depth_Attachments ${PLATFORM_LIBRARY} CookbookLibrary )
 
 # CH11 Lighting
-add_executable(01-Rendering_a_geometry_with_vertex_diffuse_lighting
-        ${COMMON_FILES}
-        Samples/CH11/S01-Rendering_a_geometry_with_vertex_diffuse_lighting.cpp)
-target_link_libraries( 01-Rendering_a_geometry_with_vertex_diffuse_lighting ${PLATFORM_LIBRARY} CookbookLibrary )
+# 01-Rendering_a_geometry_with_vertex_diffuse_lighting
+add_executable( CH1101-Rendering_a_geometry_with_vertex_diffuse_lighting ${COMMON_FILES} Samples/CH11/S01-Rendering_a_geometry_with_vertex_diffuse_lighting.cpp)
+target_link_libraries( CH1101-Rendering_a_geometry_with_vertex_diffuse_lighting ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 02-Rendering_a_geometry_with_fragment_specular_lighting
+add_executable( CH1102-Rendering_a_geometry_with_fragment_specular_lighting ${COMMON_FILES} Samples/CH11/S02-Rendering_a_geometry_with_fragment_specular_lighting.cpp)
+target_link_libraries( CH1102-Rendering_a_geometry_with_fragment_specular_lighting ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 03-Rendering_a_normal_mapped_geometry
+add_executable( CH1103-Rendering_a_normal_mapped_geometry ${COMMON_FILES} Samples/CH11/S03-Rendering_a_normal_mapped_geometry.cpp)
+target_link_libraries( CH1103-Rendering_a_normal_mapped_geometry ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 04-Rendering_a_reflective_and_refractive_geometry_using_cubemaps
+add_executable( CH1104-Rendering_a_reflective_and_refractive_geometry_using_cubemaps ${COMMON_FILES} Samples/CH11/S04-Rendering_a_reflective_and_refractive_geometry_using_cubemaps.cpp)
+target_link_libraries( CH1104-Rendering_a_reflective_and_refractive_geometry_using_cubemaps ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 05-Adding_shadows_to_the_scene
+add_executable( CH1105-Adding_shadows_to_the_scene ${COMMON_FILES} Samples/CH11/S05-Adding_shadows_to_the_scene.cpp)
+target_link_libraries( CH1105-Adding_shadows_to_the_scene ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# CH12 Advanced Rendering Techniques
+# 01-Drawing_a_skybox
+add_executable( CH1201-Drawing_a_skybox ${COMMON_FILES} Samples/CH12/S01-Drawing_a_skybox.cpp)
+target_link_libraries( CH1201-Drawing_a_skybox ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 02-Drawing_bilboards_using_geometry_shaders
+add_executable( CH1202-Drawing_bilboards_using_geometry_shaders ${COMMON_FILES} Samples/CH12/S02-Drawing_bilboards_using_geometry_shaders.cpp)
+target_link_libraries( CH1202-Drawing_bilboards_using_geometry_shaders ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 03-Drawing_particles_using_compute_and_graphics_pipelines
+add_executable( CH1203-Drawing_particles_using_compute_and_graphics_pipelines ${COMMON_FILES} Samples/CH12/S03-Drawing_particles_using_compute_and_graphics_pipelines.cpp)
+target_link_libraries( CH1203-Drawing_particles_using_compute_and_graphics_pipelines ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 04-Rendering_a_tesselated_terrain
+add_executable( CH1204-Rendering_a_tesselated_terrain ${COMMON_FILES} Samples/CH12/S04-Rendering_a_tesselated_terrain.cpp)
+target_link_libraries( CH1204-Rendering_a_tesselated_terrain ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 05-Rendering_a_fullscreen_quad_for_postprocessing
+add_executable( CH1205-Rendering_a_fullscreen_quad_for_postprocessing ${COMMON_FILES} Samples/CH12/S05-Rendering_a_fullscreen_quad_for_postprocessing.cpp)
+target_link_libraries( CH1205-Rendering_a_fullscreen_quad_for_postprocessing ${PLATFORM_LIBRARY} CookbookLibrary )
+
+# 06-Using_input_attachment_for_color_correction_postprocess_effect
+add_executable( CH1206-Using_input_attachment_for_color_correction_postprocess_effect ${COMMON_FILES} Samples/CH12/S06-Using_input_attachment_for_color_correction_postprocess_effect.cpp)
+target_link_libraries( CH1206-Using_input_attachment_for_color_correction_postprocess_effect ${PLATFORM_LIBRARY} CookbookLibrary )

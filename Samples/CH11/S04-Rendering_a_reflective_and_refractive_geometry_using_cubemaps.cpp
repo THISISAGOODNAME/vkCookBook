@@ -1,19 +1,29 @@
 //
-// Created by aicdg on 2017/6/23.
+// Created by aicdg on 2017/6/24.
 //
 
 //
 // Chapter: 11 Lighting
-// Recipe:  01 Rendering a geometry with vertex diffuse lighting
+// Recipe:  04 Rendering a reflective and refractive geometry using cubemaps
 
 #include "CookbookSampleFramework.h"
+#include "OrbitingCamera.h"
 
 using namespace VKCookbook;
 
 class Sample : public VulkanCookbookSample {
+    Mesh                                Skybox;
+    VkDestroyer<VkBuffer>               SkyboxVertexBuffer;
+    VkDestroyer<VkDeviceMemory>         SkyboxVertexBufferMemory;
+
     Mesh                                Model;
-    VkDestroyer<VkBuffer>               VertexBuffer;
-    VkDestroyer<VkDeviceMemory>         VertexBufferMemory;
+    VkDestroyer<VkBuffer>               ModelVertexBuffer;
+    VkDestroyer<VkDeviceMemory>         ModelVertexBufferMemory;
+
+    VkDestroyer<VkImage>                CubemapImage;
+    VkDestroyer<VkDeviceMemory>         CubemapImageMemory;
+    VkDestroyer<VkSampler>              CubemapSampler;
+    VkDestroyer<VkImageView>            CubemapImageView;
 
     VkDestroyer<VkDescriptorSetLayout>  DescriptorSetLayout;
     VkDestroyer<VkDescriptorPool>       DescriptorPool;
@@ -21,7 +31,8 @@ class Sample : public VulkanCookbookSample {
 
     VkDestroyer<VkRenderPass>           RenderPass;
     VkDestroyer<VkPipelineLayout>       PipelineLayout;
-    VkDestroyer<VkPipeline>             Pipeline;
+    VkDestroyer<VkPipeline>             SkyboxPipeline;
+    VkDestroyer<VkPipeline>             ModelPipeline;
 
     VkDestroyer<VkBuffer>               StagingBuffer;
     VkDestroyer<VkDeviceMemory>         StagingBufferMemory;
@@ -29,29 +40,57 @@ class Sample : public VulkanCookbookSample {
     VkDestroyer<VkBuffer>               UniformBuffer;
     VkDestroyer<VkDeviceMemory>         UniformBufferMemory;
 
+    OrbitingCamera                      Camera;
+
     virtual bool Initialize( WindowParameters WindowParameters ) override {
         if( !InitializeVulkan( WindowParameters ) ) {
             return false;
         }
 
-        // Vertex data
+        Camera = OrbitingCamera( Vector3{ 0.0f, 0.0f, 0.0f }, 4.0f );
+
+        // Vertex data - model
+
         if( !Load3DModelFromObjFile( "Data/Models/teapot.obj", true, false, false, true, Model ) ) {
             return false;
         }
 
-        InitVkDestroyer( LogicalDevice, VertexBuffer );
+        InitVkDestroyer( LogicalDevice, ModelVertexBuffer );
         if( !CreateBuffer( *LogicalDevice, sizeof( Model.Data[0] ) * Model.Data.size(),
-                           VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, *VertexBuffer ) ) {
+                           VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, *ModelVertexBuffer ) ) {
             return false;
         }
 
-        InitVkDestroyer( LogicalDevice, VertexBufferMemory );
-        if( !AllocateAndBindMemoryObjectToBuffer( PhysicalDevice, *LogicalDevice, *VertexBuffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *VertexBufferMemory ) ) {
+        InitVkDestroyer( LogicalDevice, ModelVertexBufferMemory );
+        if( !AllocateAndBindMemoryObjectToBuffer( PhysicalDevice, *LogicalDevice, *ModelVertexBuffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *ModelVertexBufferMemory ) ) {
             return false;
         }
 
         if( !UseStagingBufferToUpdateBufferWithDeviceLocalMemoryBound( PhysicalDevice, *LogicalDevice, sizeof( Model.Data[0] ) * Model.Data.size(),
-                                                                       &Model.Data[0], *VertexBuffer, 0, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                                                                       &Model.Data[0], *ModelVertexBuffer, 0, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                                                                       GraphicsQueue.Handle, FrameResources.front().CommandBuffer, {} ) ) {
+            return false;
+        }
+
+        // Vertex data - skybox
+
+        if( !Load3DModelFromObjFile( "Data/Models/cube.obj", false, false, false, false, Skybox ) ) {
+            return false;
+        }
+
+        InitVkDestroyer( LogicalDevice, SkyboxVertexBuffer );
+        if( !CreateBuffer( *LogicalDevice, sizeof( Skybox.Data[0] ) * Skybox.Data.size(),
+                           VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, *SkyboxVertexBuffer ) ) {
+            return false;
+        }
+
+        InitVkDestroyer( LogicalDevice, SkyboxVertexBufferMemory );
+        if( !AllocateAndBindMemoryObjectToBuffer( PhysicalDevice, *LogicalDevice, *SkyboxVertexBuffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *SkyboxVertexBufferMemory ) ) {
+            return false;
+        }
+
+        if( !UseStagingBufferToUpdateBufferWithDeviceLocalMemoryBound( PhysicalDevice, *LogicalDevice, sizeof( Skybox.Data[0] ) * Skybox.Data.size(),
+                                                                       &Skybox.Data[0], *SkyboxVertexBuffer, 0, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
                                                                        GraphicsQueue.Handle, FrameResources.front().CommandBuffer, {} ) ) {
             return false;
         }
@@ -78,25 +117,81 @@ class Sample : public VulkanCookbookSample {
             return false;
         }
 
-        // Descriptor set with uniform buffer
-        VkDescriptorSetLayoutBinding descriptor_set_layout_binding = {
-                0,                                          // uint32_t             binding
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     descriptorType
-                1,                                          // uint32_t             descriptorCount
-                VK_SHADER_STAGE_VERTEX_BIT,                 // VkShaderStageFlags   stageFlags
-                nullptr                                     // const VkSampler    * pImmutableSamplers
-        };
-        InitVkDestroyer( LogicalDevice, DescriptorSetLayout );
-        if( !CreateDescriptorSetLayout( *LogicalDevice, { descriptor_set_layout_binding }, *DescriptorSetLayout ) ) {
+        // Cubemap
+        InitVkDestroyer( LogicalDevice, CubemapImage );
+        InitVkDestroyer( LogicalDevice, CubemapImageMemory );
+        InitVkDestroyer( LogicalDevice, CubemapImageView );
+        InitVkDestroyer( LogicalDevice, CubemapSampler );
+        if( !CreateCombinedImageSampler( PhysicalDevice, *LogicalDevice, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, { 1024, 1024, 1 }, 1, 6,
+                                         VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_VIEW_TYPE_CUBE, VK_IMAGE_ASPECT_COLOR_BIT, VK_FILTER_LINEAR,
+                                         VK_FILTER_LINEAR, VK_SAMPLER_MIPMAP_MODE_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                                         VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, 0.0f, false, 1.0f, false, VK_COMPARE_OP_ALWAYS, 0.0f, 1.0f, VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK,
+                                         false, *CubemapSampler, *CubemapImage, *CubemapImageMemory, *CubemapImageView ) ) {
             return false;
         }
 
-        VkDescriptorPoolSize descriptor_pool_size = {
-                VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     type
-                1                                           // uint32_t             descriptorCount
+        std::vector<std::string> cubemap_images = {
+                "Data/Textures/Skansen/posx.jpg",
+                "Data/Textures/Skansen/negx.jpg",
+                "Data/Textures/Skansen/posy.jpg",
+                "Data/Textures/Skansen/negy.jpg",
+                "Data/Textures/Skansen/posz.jpg",
+                "Data/Textures/Skansen/negz.jpg"
+        };
+
+        for( size_t i = 0; i < cubemap_images.size(); ++i ) {
+            std::vector<unsigned char> cubemap_image_data;
+            int image_data_size;
+            if( !LoadTextureDataFromFile( cubemap_images[i].c_str(), 4, cubemap_image_data, nullptr, nullptr, nullptr, &image_data_size ) ) {
+                return false;
+            }
+            VkImageSubresourceLayers image_subresource = {
+                    VK_IMAGE_ASPECT_COLOR_BIT,    // VkImageAspectFlags     aspectMask
+                    0,                            // uint32_t               mipLevel
+                    static_cast<uint32_t>(i),     // uint32_t               baseArrayLayer
+                    1                             // uint32_t               layerCount
+            };
+            UseStagingBufferToUpdateImageWithDeviceLocalMemoryBound( PhysicalDevice, *LogicalDevice, image_data_size, &cubemap_image_data[0],
+                                                                     *CubemapImage, image_subresource, { 0, 0, 0 }, { 1024, 1024, 1 }, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                     0, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_ASPECT_COLOR_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                                                     GraphicsQueue.Handle, FrameResources.front().CommandBuffer, {} );
+        }
+
+        // Descriptor set
+
+        std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_bindings = {
+                {
+                        0,                                          // uint32_t             binding
+                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     descriptorType
+                        1,                                          // uint32_t             descriptorCount
+                        VK_SHADER_STAGE_VERTEX_BIT,                 // VkShaderStageFlags   stageFlags
+                        nullptr                                     // const VkSampler    * pImmutableSamplers
+                },
+                {
+                        1,                                          // uint32_t             binding
+                        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,  // VkDescriptorType     descriptorType
+                        1,                                          // uint32_t             descriptorCount
+                        VK_SHADER_STAGE_FRAGMENT_BIT,               // VkShaderStageFlags   stageFlags
+                        nullptr                                     // const VkSampler    * pImmutableSamplers
+                }
+        };
+        InitVkDestroyer( LogicalDevice, DescriptorSetLayout );
+        if( !CreateDescriptorSetLayout( *LogicalDevice, descriptor_set_layout_bindings, *DescriptorSetLayout ) ) {
+            return false;
+        }
+
+        std::vector<VkDescriptorPoolSize> descriptor_pool_sizes = {
+                {
+                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,          // VkDescriptorType     type
+                        1                                           // uint32_t             descriptorCount
+                },
+                {
+                        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,  // VkDescriptorType     type
+                        1                                           // uint32_t             descriptorCount
+                }
         };
         InitVkDestroyer( LogicalDevice, DescriptorPool );
-        if( !CreateDescriptorPool( *LogicalDevice, false, 1, { descriptor_pool_size }, *DescriptorPool ) ) {
+        if( !CreateDescriptorPool( *LogicalDevice, false, 1, descriptor_pool_sizes, *DescriptorPool ) ) {
             return false;
         }
 
@@ -118,7 +213,21 @@ class Sample : public VulkanCookbookSample {
                 }
         };
 
-        UpdateDescriptorSets( *LogicalDevice, {}, { buffer_descriptor_update }, {}, {} );
+        ImageDescriptorInfo image_descriptor_update = {
+                DescriptorSets[0],                          // VkDescriptorSet                      TargetDescriptorSet
+                1,                                          // uint32_t                             TargetDescriptorBinding
+                0,                                          // uint32_t                             TargetArrayElement
+                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,  // VkDescriptorType                     TargetDescriptorType
+                {                                           // std::vector<VkDescriptorImageInfo>   ImageInfos
+                        {
+                                *CubemapSampler,                          // VkSampler                            sampler
+                                *CubemapImageView,                        // VkImageView                          imageView
+                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL  // VkImageLayout                        imageLayout
+                        }
+                }
+        };
+
+        UpdateDescriptorSets( *LogicalDevice, { image_descriptor_update }, { buffer_descriptor_update }, {}, {} );
 
         // Render pass
         std::vector<VkAttachmentDescription> attachment_descriptions = {
@@ -148,7 +257,7 @@ class Sample : public VulkanCookbookSample {
 
         VkAttachmentReference depth_attachment = {
                 1,                                                // uint32_t                             attachment
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL  // VkImageLayout                        layout
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL  // VkImageLayout                        layout;
         };
 
         std::vector<SubpassParameters> subpass_parameters = {
@@ -195,73 +304,145 @@ class Sample : public VulkanCookbookSample {
 
         // Graphics pipeline
 
+        // Common
+
+        std::vector<VkPushConstantRange> push_constant_ranges = {
+                {
+                        VK_SHADER_STAGE_FRAGMENT_BIT,   // VkShaderStageFlags     stageFlags
+                        0,                              // uint32_t               offset
+                        sizeof( float ) * 4             // uint32_t               size
+                }
+        };
         InitVkDestroyer( LogicalDevice, PipelineLayout );
-        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout }, {}, *PipelineLayout ) ) {
+        if( !CreatePipelineLayout( *LogicalDevice, { *DescriptorSetLayout }, push_constant_ranges, *PipelineLayout ) ) {
             return false;
         }
 
-        std::vector<unsigned char> vertex_shader_spirv;
-        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/01 Rendering a geometry with vertex diffuse lighting/shader.vert.spv", vertex_shader_spirv ) ) {
+        // Model
+
+        std::vector<unsigned char> model_vertex_shader_spirv;
+        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/04 Rendering a reflective and refractive geometry using cubemaps/model.vert.spv", model_vertex_shader_spirv ) ) {
             return false;
         }
 
-        VkDestroyer<VkShaderModule> vertex_shader_module( LogicalDevice );
-        if( !CreateShaderModule( *LogicalDevice, vertex_shader_spirv, *vertex_shader_module ) ) {
+        VkDestroyer<VkShaderModule> model_vertex_shader_module( LogicalDevice );
+        if( !CreateShaderModule( *LogicalDevice, model_vertex_shader_spirv, *model_vertex_shader_module ) ) {
             return false;
         }
 
-        std::vector<unsigned char> fragment_shader_spirv;
-        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/01 Rendering a geometry with vertex diffuse lighting/shader.frag.spv", fragment_shader_spirv ) ) {
+        std::vector<unsigned char> model_fragment_shader_spirv;
+        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/04 Rendering a reflective and refractive geometry using cubemaps/model.frag.spv", model_fragment_shader_spirv ) ) {
             return false;
         }
-        VkDestroyer<VkShaderModule> fragment_shader_module( LogicalDevice );
-        if( !CreateShaderModule( *LogicalDevice, fragment_shader_spirv, *fragment_shader_module ) ) {
+        VkDestroyer<VkShaderModule> model_fragment_shader_module( LogicalDevice );
+        if( !CreateShaderModule( *LogicalDevice, model_fragment_shader_spirv, *model_fragment_shader_module ) ) {
             return false;
         }
 
-        std::vector<ShaderStageParameters> shader_stage_params = {
+        std::vector<ShaderStageParameters> model_shader_stage_params = {
                 {
                         VK_SHADER_STAGE_VERTEX_BIT,       // VkShaderStageFlagBits        ShaderStage
-                        *vertex_shader_module,            // VkShaderModule               ShaderModule
-                        "main",                           // char const                 * EntryPointName
-                        nullptr                           // VkSpecializationInfo const * SpecializationInfo
+                        *model_vertex_shader_module,      // VkShaderModule               ShaderModule
+                        "main",                           // char const                 * EntryPointName;
+                        nullptr                           // VkSpecializationInfo const * SpecializationInfo;
                 },
                 {
                         VK_SHADER_STAGE_FRAGMENT_BIT,     // VkShaderStageFlagBits        ShaderStage
-                        *fragment_shader_module,          // VkShaderModule               ShaderModule
+                        *model_fragment_shader_module,    // VkShaderModule               ShaderModule
                         "main",                           // char const                 * EntryPointName
                         nullptr                           // VkSpecializationInfo const * SpecializationInfo
                 }
         };
 
-        std::vector<VkPipelineShaderStageCreateInfo> shader_stage_create_infos;
-        SpecifyPipelineShaderStages( shader_stage_params, shader_stage_create_infos );
+        std::vector<VkPipelineShaderStageCreateInfo> model_shader_stage_create_infos;
+        SpecifyPipelineShaderStages( model_shader_stage_params, model_shader_stage_create_infos );
 
-        std::vector<VkVertexInputBindingDescription> vertex_input_binding_descriptions = {
+        std::vector<VkVertexInputBindingDescription> model_vertex_input_binding_descriptions = {
+                {
+                        0,                                // uint32_t                     binding
+                        6 * sizeof( float ),              // uint32_t                     stride
+                        VK_VERTEX_INPUT_RATE_VERTEX       // VkVertexInputRate            inputRate
+                }
+        };
+
+        std::vector<VkVertexInputAttributeDescription> model_vertex_attribute_descriptions = {
+                {
+                        0,                                // uint32_t   location
+                        0,                                // uint32_t   binding
+                        VK_FORMAT_R32G32B32_SFLOAT,       // VkFormat   format
+                        0                                 // uint32_t   offset
+                },
+                {
+                        1,                                // uint32_t   location
+                        0,                                // uint32_t   binding
+                        VK_FORMAT_R32G32B32_SFLOAT,       // VkFormat   format
+                        3 * sizeof( float)                // uint32_t   offset
+                }
+        };
+
+        VkPipelineVertexInputStateCreateInfo model_vertex_input_state_create_info;
+        SpecifyPipelineVertexInputState( model_vertex_input_binding_descriptions, model_vertex_attribute_descriptions, model_vertex_input_state_create_info );
+
+        // Skybox
+
+        std::vector<unsigned char> skybox_vertex_shader_spirv;
+        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/04 Rendering a reflective and refractive geometry using cubemaps/skybox.vert.spv", skybox_vertex_shader_spirv ) ) {
+            return false;
+        }
+
+        VkDestroyer<VkShaderModule> skybox_vertex_shader_module( LogicalDevice );
+        if( !CreateShaderModule( *LogicalDevice, skybox_vertex_shader_spirv, *skybox_vertex_shader_module ) ) {
+            return false;
+        }
+
+        std::vector<unsigned char> skybox_fragment_shader_spirv;
+        if( !GetBinaryFileContents( "Data/Shaders/11 Lighting/04 Rendering a reflective and refractive geometry using cubemaps/skybox.frag.spv", skybox_fragment_shader_spirv ) ) {
+            return false;
+        }
+        VkDestroyer<VkShaderModule> skybox_fragment_shader_module( LogicalDevice );
+        if( !CreateShaderModule( *LogicalDevice, skybox_fragment_shader_spirv, *skybox_fragment_shader_module ) ) {
+            return false;
+        }
+
+        std::vector<ShaderStageParameters> skybox_shader_stage_params = {
+                {
+                        VK_SHADER_STAGE_VERTEX_BIT,       // VkShaderStageFlagBits        ShaderStage
+                        *skybox_vertex_shader_module,     // VkShaderModule               ShaderModule
+                        "main",                           // char const                 * EntryPointName;
+                        nullptr                           // VkSpecializationInfo const * SpecializationInfo;
+                },
+                {
+                        VK_SHADER_STAGE_FRAGMENT_BIT,     // VkShaderStageFlagBits        ShaderStage
+                        *skybox_fragment_shader_module,   // VkShaderModule               ShaderModule
+                        "main",                           // char const                 * EntryPointName
+                        nullptr                           // VkSpecializationInfo const * SpecializationInfo
+                }
+        };
+
+        std::vector<VkPipelineShaderStageCreateInfo> skybox_shader_stage_create_infos;
+        SpecifyPipelineShaderStages( skybox_shader_stage_params, skybox_shader_stage_create_infos );
+
+        std::vector<VkVertexInputBindingDescription> skybox_vertex_input_binding_descriptions = {
                 {
                         0,                            // uint32_t                     binding
-                        6 * sizeof( float ),          // uint32_t                     stride
+                        3 * sizeof( float ),          // uint32_t                     stride
                         VK_VERTEX_INPUT_RATE_VERTEX   // VkVertexInputRate            inputRate
                 }
         };
 
-        std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions = {
+        std::vector<VkVertexInputAttributeDescription> skybox_vertex_attribute_descriptions = {
                 {
                         0,                                                                        // uint32_t   location
                         0,                                                                        // uint32_t   binding
                         VK_FORMAT_R32G32B32_SFLOAT,                                               // VkFormat   format
                         0                                                                         // uint32_t   offset
-                },
-                {
-                        1,                                                                        // uint32_t   location
-                        0,                                                                        // uint32_t   binding
-                        VK_FORMAT_R32G32B32_SFLOAT,                                               // VkFormat   format
-                        3 * sizeof( float )                                                       // uint32_t   offset
                 }
         };
 
-        VkPipelineVertexInputStateCreateInfo vertex_input_state_create_info;
-        SpecifyPipelineVertexInputState( vertex_input_binding_descriptions, vertex_attribute_descriptions, vertex_input_state_create_info );
+        VkPipelineVertexInputStateCreateInfo skybox_vertex_input_state_create_info;
+        SpecifyPipelineVertexInputState( skybox_vertex_input_binding_descriptions, skybox_vertex_attribute_descriptions, skybox_vertex_input_state_create_info );
+
+        // Common
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly_state_create_info;
         SpecifyPipelineInputAssemblyState( VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false, input_assembly_state_create_info );
@@ -293,8 +474,17 @@ class Sample : public VulkanCookbookSample {
         VkPipelineViewportStateCreateInfo viewport_state_create_info;
         SpecifyPipelineViewportAndScissorTestState( viewport_infos, viewport_state_create_info );
 
-        VkPipelineRasterizationStateCreateInfo rasterization_state_create_info;
-        SpecifyPipelineRasterizationState( false, false, VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, false, 0.0f, 1.0f, 0.0f, 1.0f, rasterization_state_create_info );
+        // Model
+
+        VkPipelineRasterizationStateCreateInfo model_rasterization_state_create_info;
+        SpecifyPipelineRasterizationState( false, false, VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, false, 0.0f, 1.0f, 0.0f, 1.0f, model_rasterization_state_create_info );
+
+        // Skybox
+
+        VkPipelineRasterizationStateCreateInfo skybox_rasterization_state_create_info;
+        SpecifyPipelineRasterizationState( false, false, VK_POLYGON_MODE_FILL, VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, false, 0.0f, 1.0f, 0.0f, 1.0f, skybox_rasterization_state_create_info );
+
+        // Common
 
         VkPipelineMultisampleStateCreateInfo multisample_state_create_info;
         SpecifyPipelineMultisampleState( VK_SAMPLE_COUNT_1_BIT, false, 0.0f, nullptr, false, false, multisample_state_create_info );
@@ -327,16 +517,31 @@ class Sample : public VulkanCookbookSample {
         VkPipelineDynamicStateCreateInfo dynamic_state_create_info;
         SpecifyPipelineDynamicStates( dynamic_states, dynamic_state_create_info );
 
-        VkGraphicsPipelineCreateInfo pipeline_create_info;
-        SpecifyGraphicsPipelineCreationParameters( 0, shader_stage_create_infos, vertex_input_state_create_info, input_assembly_state_create_info,
-                                                   nullptr, &viewport_state_create_info, rasterization_state_create_info, &multisample_state_create_info, &depth_stencil_state_create_info, &blend_state_create_info,
-                                                   &dynamic_state_create_info, *PipelineLayout, *RenderPass, 0, VK_NULL_HANDLE, -1, pipeline_create_info );
+        // Model
 
-        std::vector<VkPipeline> pipeline;
-        if( !CreateGraphicsPipelines( *LogicalDevice, { pipeline_create_info }, VK_NULL_HANDLE, pipeline ) ) {
+        VkGraphicsPipelineCreateInfo model_pipeline_create_info;
+        SpecifyGraphicsPipelineCreationParameters( 0, model_shader_stage_create_infos, model_vertex_input_state_create_info, input_assembly_state_create_info,
+                                                   nullptr, &viewport_state_create_info, model_rasterization_state_create_info, &multisample_state_create_info, &depth_stencil_state_create_info, &blend_state_create_info,
+                                                   &dynamic_state_create_info, *PipelineLayout, *RenderPass, 0, VK_NULL_HANDLE, -1, model_pipeline_create_info );
+
+        std::vector<VkPipeline> model_pipeline;
+        if( !CreateGraphicsPipelines( *LogicalDevice, { model_pipeline_create_info }, VK_NULL_HANDLE, model_pipeline ) ) {
             return false;
         }
-        InitVkDestroyer( LogicalDevice, pipeline[0], Pipeline );
+        InitVkDestroyer( LogicalDevice, model_pipeline[0], ModelPipeline );
+
+        // Skybox
+
+        VkGraphicsPipelineCreateInfo skybox_pipeline_create_info;
+        SpecifyGraphicsPipelineCreationParameters( 0, skybox_shader_stage_create_infos, skybox_vertex_input_state_create_info, input_assembly_state_create_info,
+                                                   nullptr, &viewport_state_create_info, skybox_rasterization_state_create_info, &multisample_state_create_info, &depth_stencil_state_create_info, &blend_state_create_info,
+                                                   &dynamic_state_create_info, *PipelineLayout, *RenderPass, 0, VK_NULL_HANDLE, -1, skybox_pipeline_create_info );
+
+        std::vector<VkPipeline> skybox_pipeline;
+        if( !CreateGraphicsPipelines( *LogicalDevice, { skybox_pipeline_create_info }, VK_NULL_HANDLE, skybox_pipeline ) ) {
+            return false;
+        }
+        InitVkDestroyer( LogicalDevice, skybox_pipeline[0], SkyboxPipeline );
 
         return true;
     }
@@ -417,14 +622,28 @@ class Sample : public VulkanCookbookSample {
             };
             SetScissorStateDynamically( command_buffer, 0, { scissor } );
 
-            BindVertexBuffers( command_buffer, 0, { { *VertexBuffer, 0 } } );
-
             BindDescriptorSets( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *PipelineLayout, 0, DescriptorSets, {} );
 
-            BindPipelineObject( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *Pipeline );
+            // Draw model
+
+            BindPipelineObject( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *ModelPipeline );
+
+            BindVertexBuffers( command_buffer, 0, { { *ModelVertexBuffer, 0 } } );
+
+            ProvideDataToShadersThroughPushConstants( command_buffer, *PipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof( float ) * 4, &Camera.GetPosition()[0] );
 
             for( size_t i = 0; i < Model.Parts.size(); ++i ) {
                 DrawGeometry( command_buffer, Model.Parts[i].VertexCount, 1, Model.Parts[i].VertexOffset, 0 );
+            }
+
+            // Draw skybox
+
+            BindPipelineObject( command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *SkyboxPipeline );
+
+            BindVertexBuffers( command_buffer, 0, { { *SkyboxVertexBuffer, 0 } } );
+
+            for( size_t i = 0; i < Skybox.Parts.size(); ++i ) {
+                DrawGeometry( command_buffer, Skybox.Parts[i].VertexCount, 1, Skybox.Parts[i].VertexOffset, 0 );
             }
 
             EndRenderPass( command_buffer );
@@ -459,31 +678,21 @@ class Sample : public VulkanCookbookSample {
 
     bool UpdateStagingBuffer( bool force ) {
         UpdateUniformBuffer = true;
-        static float horizontal_angle = 0.0f;
-        static float vertical_angle = 0.0f;
         if( MouseState.Buttons[0].IsPressed ||
             force ) {
-            horizontal_angle += 0.5f * MouseState.Position.Delta.X;
-            vertical_angle -= 0.5f * MouseState.Position.Delta.Y;
-            if( vertical_angle > 90.0f ) {
-                vertical_angle = 90.0f;
-            }
-            if( vertical_angle < -90.0f ) {
-                vertical_angle = -90.0f;
-            }
+            Camera.RotateHorizontally( 0.5f * MouseState.Position.Delta.X );
+            Camera.RotateVertically( -0.5f * MouseState.Position.Delta.Y );
 
-            Matrix4x4 rotation_matrix = PrepareRotationMatrix( vertical_angle, { 1.0f, 0.0f, 0.0f } ) * PrepareRotationMatrix( horizontal_angle, { 0.0f, -1.0f, 0.0f } );
-            Matrix4x4 translation_matrix = PrepareTranslationMatrix( 0.0f, 0.0f, -4.0f );
-            Matrix4x4 model_view_matrix = translation_matrix * rotation_matrix;
+            Matrix4x4 view_matrix = Camera.GetMatrix();
 
-            if( !MapUpdateAndUnmapHostVisibleMemory( *LogicalDevice, *StagingBufferMemory, 0, sizeof( model_view_matrix[0] ) * model_view_matrix.size(), &model_view_matrix[0], true, nullptr ) ) {
+            if( !MapUpdateAndUnmapHostVisibleMemory( *LogicalDevice, *StagingBufferMemory, 0, sizeof( view_matrix[0] ) * view_matrix.size(), &view_matrix[0], true, nullptr ) ) {
                 return false;
             }
 
             Matrix4x4 perspective_matrix = PreparePerspectiveProjectionMatrix( static_cast<float>(Swapchain.Size.width) / static_cast<float>(Swapchain.Size.height),
                                                                                50.0f, 0.5f, 10.0f );
 
-            if( !MapUpdateAndUnmapHostVisibleMemory( *LogicalDevice, *StagingBufferMemory, sizeof( model_view_matrix[0] ) * model_view_matrix.size(),
+            if( !MapUpdateAndUnmapHostVisibleMemory( *LogicalDevice, *StagingBufferMemory, sizeof( view_matrix[0] ) * view_matrix.size(),
                                                      sizeof( perspective_matrix[0] ) * perspective_matrix.size(), &perspective_matrix[0], true, nullptr ) ) {
                 return false;
             }
@@ -506,4 +715,4 @@ class Sample : public VulkanCookbookSample {
 
 };
 
-VULKAN_COOKBOOK_SAMPLE_FRAMEWORK( "11/01 - Rendering a geometry with vertex diffuse lighting", 50, 25, 800, 600, Sample )
+VULKAN_COOKBOOK_SAMPLE_FRAMEWORK( "11/04 - Rendering a reflective or refractive geometry using cubemaps", 50, 25, 800, 600, Sample )
