@@ -35,7 +35,7 @@ cd build
 
 cmake.exe .. -DVK_USE_PLATFORM=WIN32 -G "Visual Studio 14 2015 Win64"
 
-if exist VulkanCookbook.sln (
+if exist vkCookBook.sln (
 	start "" "vkCookBook.sln"
 ) else (
 	echo "Error occurred during solution creation!"
